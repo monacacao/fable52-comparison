@@ -1,6 +1,6 @@
 import sys, importlib, traceback
 sys.path.insert(0, ".")
-m = importlib.import_module(sys.argv[1] if len(sys.argv) > 1 else "test_cart")
+m = importlib.import_module(sys.argv[1] if len(sys.argv) > 1 else "test_shop")
 names = [n for n in dir(m) if n.startswith("test_")]
 fail = 0
 for n in names:

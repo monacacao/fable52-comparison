@@ -18,7 +18,8 @@ GitHub Pagesで公開すると、次のページから、ブラウザで開け�
 |---|---|
 | `mario/` | マリオ1-1風のゲーム4本と、指示文 |
 | `svg/` | 自転車に乗るペリカンのSVG4本と、指示文 |
-| `bugfix/` | バグ入りのコード、テスト、4本の修正、指示文 |
+| `bugfix/` | 大きめのバグ修正(約185行、バグ14個、テスト31本)。コード、テスト、4本の修正、指示文 |
+| `bugfix-small/` | 小さいバグ修正(約50行、バグ5個、テスト8本)。同じ構成 |
 | `images/` | SVGを画像にしたもの |
 
 ## マリオ風ゲームの操作
@@ -27,11 +28,12 @@ GitHub Pagesで公開すると、次のページから、ブラウザで開け�
 ## バグ修正を試す
 ```
 cd bugfix
-python3 run_tests.py            # 最初は1/8
-cp fixes/fable-5-2_run1.cart.py cart.py
-python3 run_tests.py            # 8/8
+python3 run_tests.py            # 最初は12/31
+cp shop.py shop.orig.py         # 元を控える
+cp fixes/fable-5-2_run1.shop.py shop.py
+python3 run_tests.py            # 31/31
 ```
-`cart.py` は、試す前に元のものを控えておいてください。
+小さいほう(`bugfix-small/`)は、`cart.py` と `test_cart.py` で、同じ手順です。`shop.py` は、試す前に元のものを控えておいてください。
 
 ## 注意
 - 画像や指示文は、すべてAIに作らせたものです。マリオ風のゲームは、図形だけで作った別物です。任天堂とは関係ありません。

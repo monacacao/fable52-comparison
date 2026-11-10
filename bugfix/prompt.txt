@@ -1,18 +1,33 @@
-次のPythonモジュールには、バグがあります。テストが全部通るように、cart.py を直してください。
+次のPythonモジュールには、バグがいくつかあります。テストが全部通るように、shop.py を直してください。
 - テストは変更しない
 - バグでない部分は、変更しない
-- 出力は、直した cart.py の全文だけ(説明は不要)
+- 出力は、直した shop.py の全文だけ(説明は不要)
 
-## cart.py
+## shop.py
 ```python
-"""買い物かごの計算モジュール。"""
-from datetime import date
+"""ネットショップの計算・在庫・配送をまとめたモジュール。"""
+from datetime import date, datetime, timedelta
+import math
+
+TAX_STANDARD = 0.10
+TAX_REDUCED = 0.08
+FREE_SHIPPING_FROM = 5000
+BASE_SHIPPING = 500
+REGION_SURCHARGE = {"hokkaido": 300, "okinawa": 800, "remote_island": 1200}
+HOLIDAYS = {date(2026, 11, 23), date(2026, 12, 29), date(2026, 12, 30), date(2026, 12, 31)}
+CUTOFF_HOUR = 15
 
 
+# ---------- かご ----------
 def add_item(item, cart=[]):
-    """かごに商品を追加して、かごを返す。"""
+    """かごに商品を追加して、かごを返す。cart を省略すると新しいかごを作る。"""
     cart.append(item)
     return cart
+
+
+def remove_item(cart, name):
+    """名前が一致する商品を全部外した新しいかごを返す。元のかごは変えない。"""
+    return [i for i in cart if i["name"] != name]
 
 
 def subtotal(cart):
@@ -23,100 +38,338 @@ def subtotal(cart):
     return total
 
 
+def total_weight(cart):
+    """かご全体の重さ(g)。weight が無い商品は 0 とみなす。"""
+    return sum(i.get("weight", 0) * i["qty"] for i in cart)
+
+
+# ---------- 割引・クーポン ----------
 def discount_rate(total):
     """合計金額に応じた割引率。5000円以上で5%、10000円以上で10%。"""
-    if total > 10000:
+    if total >= 10000:
         return 0.10
     if total > 5000:
         return 0.05
     return 0.0
 
 
-def tax(amount):
-    """消費税10%。1円未満は四捨五入。"""
-    return int(amount * 10 / 100)
+def apply_coupon(total, coupon):
+    """クーポンを適用した金額を返す。coupon は None か {'kind','value','min_total'}。
+    kind は 'percent'(value %引き)か 'fixed'(value 円引き)。min_total 未満なら適用しない。
+    結果は 0 円未満にならない。"""
+    if not coupon or total < coupon.get("min_total", 0):
+        return total
+    if coupon["kind"] == "percent":
+        total = total * (100 - coupon["value"]) / 100
+    elif coupon["kind"] == "fixed":
+        total = total - coupon["value"]
+    return int(total)
 
 
+# ---------- 税 ----------
+def round_yen(x):
+    """円未満を四捨五入する(0.5は切り上げ)。"""
+    return int(x)
+
+
+def tax_amount(cart):
+    """消費税額。食品(food=True)は8%、それ以外は10%。かご全体で合算してから四捨五入する。"""
+    raw = 0.0
+    for i in cart:
+        rate = TAX_STANDARD if i.get("food") else TAX_REDUCED
+        raw += i["price"] * i["qty"] * rate
+    return round_yen(raw)
+
+
+# ---------- 送料 ----------
+def shipping_fee(total_after_discount, region=None, weight_g=0):
+    """送料。割引後の金額が5000円以上なら基本送料は無料。地域加算と重量加算は無料にならない。
+    重量加算は、5kgを超えた分を1kgごと(切り上げ)に100円。"""
+    fee = 0 if total_after_discount >= FREE_SHIPPING_FROM else BASE_SHIPPING
+    fee += REGION_SURCHARGE.get(region, 0) if fee else 0
+    if weight_g > 5000:
+        fee += math.ceil((weight_g - 5000) / 1000) * 100
+    return fee
+
+
+# ---------- 配送日 ----------
+def is_business_day(d):
+    return d.weekday() < 6 and d not in HOLIDAYS
+
+
+def next_business_day(d):
+    """d の翌営業日(土日・祝日を除く)。"""
+    d += timedelta(days=1)
+    while not is_business_day(d):
+        d += timedelta(days=1)
+    return d
+
+
+def ship_date(ordered_at):
+    """注文日時から発送日を決める。15時より前の営業日の注文は当日発送、それ以外は翌営業日。"""
+    d = ordered_at.date()
+    if is_business_day(d) and ordered_at.hour <= CUTOFF_HOUR:
+        return d
+    return next_business_day(d)
+
+
+# ---------- 在庫 ----------
+class Stock:
+    def __init__(self, counts):
+        self.counts = dict(counts)
+
+    def reserve(self, name, qty):
+        """在庫を確保する。足りなければ ValueError。ちょうど全部は確保できる。"""
+        have = self.counts.get(name, 0)
+        if qty >= have:
+            raise ValueError(f"在庫不足: {name} ({have} < {qty})")
+        self.counts[name] = have - qty
+
+    def release(self, name, qty):
+        self.counts[name] = self.counts.get(name, 0) + qty
+
+    def low_stock(self, threshold):
+        """在庫が threshold 以下の商品を、少ない順に (名前, 数) で返す。同数は名前順。"""
+        low = [(n, c) for n, c in self.counts.items() if c <= threshold]
+        return sorted(low, key=lambda t: (-t[1], t[0]))
+
+
+# ---------- 一覧表示 ----------
+def total_pages(n_items, per_page):
+    return max(1, n_items // per_page)
+
+
+def paginate(items, page, per_page):
+    """page は 1 始まり。範囲外のページは空のリスト。"""
+    start = page * per_page
+    return items[start:start + per_page]
+
+
+# ---------- CSV ----------
+def parse_csv_line(line):
+    """ダブルクォートで囲まれた欄の中のカンマを区切りとして扱わない、簡単なCSV 1行の解析。"""
+    fields, cur, quoted = [], "", False
+    for ch in line:
+        if ch == '"':
+            quoted = not quoted
+        elif ch == ",":
+            fields.append(cur)
+            cur = ""
+        else:
+            cur += ch
+    fields.append(cur)
+    return fields
+
+
+# ---------- ほかの道具(バグではない) ----------
 def split_bill(total, people):
-    """合計を人数で割る。端数は先頭の人に寄せる。人数分の金額のリストを返す。"""
-    each = total // people
-    result = [each] * people
-    result[0] += total - each * people
-    return result
+    """割り勘。端数は先頭の人から1円ずつ多く負担する。"""
+    base, extra = divmod(total, people)
+    return [base + (1 if i < extra else 0) for i in range(people)]
 
 
-def days_until(deadline, today=None):
-    """締切までの日数。今日が締切なら0、過ぎていれば負の数。"""
-    today = today or date.today()
-    return (deadline - today).days + 1
+def slugify(text):
+    """英数字以外をハイフンにして、小文字にする。"""
+    out, prev = "", ""
+    for ch in text.lower():
+        c = ch if ch.isalnum() and ch.isascii() else "-"
+        if c == "-" and prev == "-":
+            continue
+        out += c
+        prev = c
+    return out.strip("-")
 
 
-def checkout(cart):
-    """割引後の合計に税をかけた、支払額を返す。"""
+def invoice(cart, coupon=None, region=None):
+    """請求内容をまとめる。割引率→クーポンの順に適用し、送料は割引後の金額で決める。"""
     sub = subtotal(cart)
-    after = sub - sub * discount_rate(sub)
-    return after + tax(after)
+    after_rate = int(sub * (1 - discount_rate(sub)))
+    after = apply_coupon(after_rate, coupon)
+    ship = shipping_fee(after, region, total_weight(cart))
+    tax = tax_amount(cart)
+    return {"subtotal": sub, "after_discount": after, "shipping": ship, "tax": tax, "total": after + ship + tax}
 ```
 
-## test_cart.py
+## test_shop.py
 ```python
-from datetime import date
-import cart as c
+from datetime import date, datetime
+import shop as s
 
 
-def item(p, q=1):
-    return {"name": "x", "price": p, "qty": q}
+def cart3():
+    return [
+        {"name": "ペン", "price": 150, "qty": 4, "weight": 20},
+        {"name": "ノート", "price": 300, "qty": 2, "weight": 120},
+        {"name": "米", "price": 2000, "qty": 1, "food": True, "weight": 5000},
+    ]
 
 
 def test_add_item_independent_carts():
-    a = c.add_item(item(100))
-    b = c.add_item(item(200))
+    a = s.add_item({"name": "a", "price": 1, "qty": 1})
+    b = s.add_item({"name": "b", "price": 1, "qty": 1})
     assert len(a) == 1 and len(b) == 1
 
 
+def test_add_item_existing_cart():
+    c = []
+    s.add_item({"name": "a", "price": 1, "qty": 1}, c)
+    assert len(c) == 1
+
+
+def test_remove_item_keeps_original():
+    c = cart3()
+    r = s.remove_item(c, "ペン")
+    assert len(c) == 3 and [i["name"] for i in r] == ["ノート", "米"]
+
+
 def test_subtotal_includes_first_item():
-    assert c.subtotal([item(100, 2), item(300)]) == 500
+    assert s.subtotal(cart3()) == 150 * 4 + 300 * 2 + 2000
 
 
-def test_discount_boundaries():
-    assert c.discount_rate(5000) == 0.05
-    assert c.discount_rate(10000) == 0.10
-    assert c.discount_rate(4999) == 0.0
+def test_total_weight():
+    assert s.total_weight(cart3()) == 80 + 240 + 5000
+    assert s.total_weight([{"name": "x", "price": 1, "qty": 3}]) == 0
 
 
-def test_tax_rounds_half_up():
-    assert c.tax(105) == 11
-    assert c.tax(100) == 10
+def test_discount_rate_boundaries():
+    assert s.discount_rate(4999) == 0.0
+    assert s.discount_rate(5000) == 0.05
+    assert s.discount_rate(9999) == 0.05
+    assert s.discount_rate(10000) == 0.10
 
 
-def test_split_bill_sums_and_even():
-    r = c.split_bill(1000, 3)
-    assert sum(r) == 1000 and len(r) == 3 and r[0] == 334
+def test_coupon_percent():
+    assert s.apply_coupon(2000, {"kind": "percent", "value": 10}) == 1800
 
 
-def test_days_until():
-    assert c.days_until(date(2026, 11, 10), date(2026, 11, 10)) == 0
-    assert c.days_until(date(2026, 11, 12), date(2026, 11, 10)) == 2
+def test_coupon_fixed():
+    assert s.apply_coupon(2000, {"kind": "fixed", "value": 500}) == 1500
 
 
-def test_checkout():
-    cart = [item(5000), item(1000, 2)]
-    assert c.checkout(cart) == 7000 * 0.95 + c.tax(7000 * 0.95)
+def test_coupon_never_negative():
+    assert s.apply_coupon(300, {"kind": "fixed", "value": 500}) == 0
 
 
-def test_checkout_int():
-    assert c.checkout([item(1000)]) == 1100
-```
+def test_coupon_min_total():
+    c = {"kind": "fixed", "value": 500, "min_total": 3000}
+    assert s.apply_coupon(2999, c) == 2999
+    assert s.apply_coupon(3000, c) == 2500
 
-## 今のテスト結果
-```
-FAIL test_add_item_independent_carts - AssertionError 
-FAIL test_checkout - AssertionError 
-FAIL test_checkout_int - AssertionError 
-FAIL test_days_until - AssertionError 
-FAIL test_discount_boundaries - AssertionError 
-PASS test_split_bill_sums_and_even
-FAIL test_subtotal_includes_first_item - AssertionError 
-FAIL test_tax_rounds_half_up - AssertionError 
-1/8 passed
+
+def test_coupon_none():
+    assert s.apply_coupon(1234, None) == 1234
+
+
+def test_round_yen_half_up():
+    assert s.round_yen(10.5) == 11
+    assert s.round_yen(10.49) == 10
+
+
+def test_tax_mixed_rates():
+    # ペン600+ノート600=1200→10%で120、米2000→8%で160、合計280
+    assert s.tax_amount(cart3()) == 280
+
+
+def test_tax_rounds_after_summing():
+    c = [{"name": "a", "price": 105, "qty": 1}, {"name": "b", "price": 105, "qty": 1}]
+    assert s.tax_amount(c) == 21
+
+
+def test_shipping_free_after_discount():
+    assert s.shipping_fee(5000) == 0
+    assert s.shipping_fee(4999) == 500
+
+
+def test_shipping_region_surcharge_not_free():
+    assert s.shipping_fee(6000, "okinawa") == 800
+    assert s.shipping_fee(3000, "hokkaido") == 800
+
+
+def test_shipping_weight_surcharge():
+    assert s.shipping_fee(6000, None, 5000) == 0
+    assert s.shipping_fee(6000, None, 5001) == 100
+    assert s.shipping_fee(6000, None, 7500) == 300
+
+
+def test_business_day_weekend_and_holiday():
+    assert s.is_business_day(date(2026, 11, 13))        # 金
+    assert not s.is_business_day(date(2026, 11, 14))    # 土
+    assert not s.is_business_day(date(2026, 11, 15))    # 日
+    assert not s.is_business_day(date(2026, 11, 23))    # 祝日
+
+
+def test_next_business_day_skips_weekend():
+    assert s.next_business_day(date(2026, 11, 13)) == date(2026, 11, 16)
+    assert s.next_business_day(date(2026, 11, 14)) == date(2026, 11, 16)
+
+
+def test_next_business_day_skips_holiday():
+    assert s.next_business_day(date(2026, 11, 20)) == date(2026, 11, 24)
+
+
+def test_ship_date_cutoff():
+    assert s.ship_date(datetime(2026, 11, 10, 14, 59)) == date(2026, 11, 10)
+    assert s.ship_date(datetime(2026, 11, 10, 15, 0)) == date(2026, 11, 11)
+
+
+def test_ship_date_weekend_order():
+    assert s.ship_date(datetime(2026, 11, 14, 9, 0)) == date(2026, 11, 16)
+
+
+def test_reserve_exact_stock():
+    st = s.Stock({"a": 3})
+    st.reserve("a", 3)
+    assert st.counts["a"] == 0
+
+
+def test_reserve_insufficient():
+    st = s.Stock({"a": 3})
+    try:
+        st.reserve("a", 4)
+    except ValueError:
+        assert st.counts["a"] == 3
+        return
+    raise AssertionError("ValueError が出ませんでした")
+
+
+def test_low_stock_order():
+    st = s.Stock({"c": 2, "a": 2, "b": 0, "d": 9})
+    assert st.low_stock(2) == [("b", 0), ("a", 2), ("c", 2)]
+
+
+def test_pagination():
+    items = list(range(1, 11))
+    assert s.paginate(items, 1, 4) == [1, 2, 3, 4]
+    assert s.paginate(items, 3, 4) == [9, 10]
+    assert s.paginate(items, 4, 4) == []
+    assert s.total_pages(10, 4) == 3
+    assert s.total_pages(8, 4) == 2
+    assert s.total_pages(0, 4) == 1
+
+
+def test_parse_csv_quotes():
+    assert s.parse_csv_line('1,"ペン,黒",150') == ["1", "ペン,黒", "150"]
+    assert s.parse_csv_line("a,,c") == ["a", "", "c"]
+
+
+def test_split_bill():
+    assert s.split_bill(1000, 3) == [334, 333, 333]
+    assert sum(s.split_bill(1001, 4)) == 1001
+
+
+def test_slugify():
+    assert s.slugify("Hello,  World!") == "hello-world"
+
+
+def test_invoice_flow():
+    inv = s.invoice(cart3())
+    # 小計3200、割引なし、送料500+重量加算100(5320g)=600、税280
+    assert inv == {"subtotal": 3200, "after_discount": 3200, "shipping": 600, "tax": 280, "total": 4080}
+
+
+def test_invoice_discount_then_free_shipping():
+    c = [{"name": "x", "price": 5200, "qty": 1}]
+    inv = s.invoice(c)
+    # 5200 → 5%引きで4940。割引後は5000未満なので送料500
+    assert inv["after_discount"] == 4940 and inv["shipping"] == 500
 ```
