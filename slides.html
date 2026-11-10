@@ -1,0 +1,946 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark light">
+<title>Fable 5.1 と 5.2 の比較(スライド版)</title>
+<style>
+  /* ============ 配色(システム設定で自動切り替え) ============ */
+  :root {
+    color-scheme: dark;
+    --bg: #060814;
+    --bg-glow1: rgba(90, 215, 255, 0.10);
+    --bg-glow2: rgba(255, 143, 92, 0.10);
+    --panel: rgba(16, 20, 40, 0.80);
+    --card: rgba(30, 38, 78, 0.72);
+    --card-hover: rgba(42, 52, 104, 0.85);
+    --line: rgba(170, 188, 255, 0.30);
+    --text: #eef1ff;
+    --soft: #d5dbf7;
+    --muted: #a9b1d6;
+    --c51: #5ad7ff;
+    --c52: #ff8f5c;
+    --tint51: rgba(90, 215, 255, 0.10);
+    --tint52: rgba(255, 143, 92, 0.10);
+    --gold: #ffc94a;
+    --gold-text: #ffc94a;
+    --on-gold: #0a0d1e;
+    --ok: #6ee7a8;
+    --on-accent: #0a0d1e;
+    --track: rgba(130, 150, 230, 0.20);
+    --halo: rgba(6, 8, 20, 0.80);
+    --shadow: rgba(0, 0, 0, 0.45);
+    --h1-shadow: 0 1px 0 rgba(255,255,255,0.12), 0 2px 0 #1a2040, 0 4px 0 #151a36, 0 6px 0 #10142b, 0 18px 40px rgba(0,0,0,0.75);
+    --h1-51: 0 2px 0 #114a66, 0 4px 0 #0d3950, 0 6px 0 #09283a, 0 0 34px rgba(90,215,255,0.55);
+    --h1-52: 0 2px 0 #7a3518, 0 4px 0 #5e2811, 0 6px 0 #431c0b, 0 0 34px rgba(255,143,92,0.55);
+    --focus: #ffc94a;
+    --pic-bg: #f4f6fb;
+  }
+  @media (prefers-color-scheme: light) {
+    :root {
+      color-scheme: light;
+      --bg: #f3f5fc;
+      --bg-glow1: rgba(30, 140, 200, 0.14);
+      --bg-glow2: rgba(230, 110, 50, 0.12);
+      --panel: rgba(255, 255, 255, 0.82);
+      --card: rgba(232, 237, 255, 0.85);
+      --card-hover: rgba(214, 222, 252, 0.95);
+      --line: rgba(40, 56, 130, 0.34);
+      --text: #12162e;
+      --soft: #2b3258;
+      --muted: #4a5278;
+      --c51: #0a6a94;
+      --c52: #b3420c;
+      --tint51: rgba(10, 106, 148, 0.09);
+      --tint52: rgba(179, 66, 12, 0.09);
+      --gold: #ffc94a;
+      --gold-text: #7d5200;
+      --on-gold: #1a1400;
+      --ok: #0a7443;
+      --on-accent: #ffffff;
+      --track: rgba(40, 56, 130, 0.14);
+      --halo: rgba(243, 245, 252, 0.88);
+      --shadow: rgba(30, 40, 100, 0.18);
+      --h1-shadow: 0 2px 0 rgba(255,255,255,0.9), 0 10px 26px rgba(30, 40, 100, 0.22);
+      --h1-51: 0 2px 0 rgba(255,255,255,0.9), 0 8px 22px rgba(10, 106, 148, 0.28);
+      --h1-52: 0 2px 0 rgba(255,255,255,0.9), 0 8px 22px rgba(179, 66, 12, 0.28);
+      --focus: #0a4fd0;
+    }
+  }
+
+  /* ============ 同心円の角丸 ============
+     外側の角丸半径 = 内側の角丸半径 + 内側と外側の余白(すべて calc で算出) */
+  :root {
+    --g: 14px;                                   /* 枠と中身の余白 */
+    --r1: 14px;                                  /* いちばん内側の角丸(ピル・ボタン等) */
+    --rc: calc(var(--r1) + var(--g));            /* カード = 内側 + 余白 */
+    --rp: calc(var(--rc) + var(--g));            /* パネル = カード + 余白 */
+    --pad-shot: 8px;                             /* 画像カードの余白 */
+    --r-pic: 12px;                               /* 画像の角丸 */
+    --rs: calc(var(--r-pic) + var(--pad-shot));  /* 画像カード */
+    --rps: calc(var(--rs) + var(--g));           /* 画像カードを入れるパネル */
+    --tp: 3px;                                   /* 棒の枠と中身の余白 */
+    --rtrack: 10px;                              /* 棒の枠 */
+    --rfill: calc(var(--rtrack) - var(--tp));    /* 棒の中身 */
+    --rchart: calc(var(--rtrack) + var(--g));    /* 棒グラフのカード */
+    --arrow: 64px;                               /* 矢印の丸の直径 */
+  }
+  @media (max-width: 480px) {
+    :root { --g: 10px; --r1: 12px; --pad-shot: 6px; --r-pic: 10px; --arrow: 68px; }
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; background: var(--bg); }
+  body {
+    margin: 0; min-height: 100vh;
+    background:
+      radial-gradient(1200px 700px at 15% -10%, var(--bg-glow1), transparent 60%),
+      radial-gradient(1000px 700px at 90% 10%, var(--bg-glow2), transparent 60%),
+      var(--bg);
+    color: var(--text);
+    font-family: "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Yu Gothic UI", "Yu Gothic", Meiryo, "Noto Sans JP", system-ui, sans-serif;
+    line-height: 1.7;
+  }
+  a { color: inherit; }
+  a:focus-visible, button:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; border-radius: 8px; }
+  img { max-width: 100%; display: block; }
+  code, .mono { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; }
+  .v51 { color: var(--c51); }
+  .v52 { color: var(--c52); }
+
+  #bg { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
+
+  /* ============ スライドの土台 ============ */
+  .stage { position: relative; z-index: 1; }
+  .slide { position: relative; min-height: 100vh; display: grid; place-items: center; padding: 28px 16px; }
+  .inner { width: 100%; max-width: 1080px; }
+
+  .js, .js body { overflow: hidden; height: 100%; overscroll-behavior: none; touch-action: none; }
+  .js .stage { position: fixed; inset: 0; perspective: 1500px; perspective-origin: 50% 40%; }
+  .js .slide {
+    position: absolute; inset: 0; min-height: 0; height: 100vh; height: 100dvh;
+    padding: clamp(14px, 3.2vh, 38px) clamp(14px, 3vw, 28px);
+    overflow: hidden;
+    opacity: 0; visibility: hidden; pointer-events: none;
+    transition: transform .85s cubic-bezier(.22,.8,.24,1), opacity .6s ease, visibility 0s linear .85s;
+    will-change: transform, opacity;
+  }
+  .js .slide[data-pos="prev"] { transform: translate3d(0, -16%, -520px) rotateX(10deg); }
+  .js .slide[data-pos="next"] { transform: translate3d(0, 16%, -520px) rotateX(-10deg); }
+  .js .slide[data-pos="cur"] { opacity: 1; visibility: visible; pointer-events: auto; transform: none; transition-delay: 0s; }
+
+  /* 画面内の要素が順に現れる */
+  .js .rv { opacity: 0; transform: translateY(26px) scale(.98); transition: opacity .6s ease, transform .8s cubic-bezier(.2,.8,.2,1); }
+  .js .slide[data-pos="cur"] .rv { opacity: 1; transform: none; transition-delay: calc(.22s + var(--i, 0) * .08s); }
+  .js .slide:not([data-pos="cur"]) .rv { transition-delay: 0s; }
+
+  /* ページ位置のドット */
+  .dots {
+    position: fixed; z-index: 5; right: 10px; top: 50%; transform: translateY(-50%);
+    display: none; flex-direction: column; gap: 2px; padding: 6px; margin: 0; list-style: none;
+    background: var(--panel); border: 1px solid var(--line);
+    border-radius: calc(12px + 6px);   /* ボタン半径12 + 余白6 */
+    -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+  }
+  .js .dots { display: flex; }
+  .dots button {
+    display: grid; place-items: center; width: 24px; height: 24px; padding: 0; margin: 0;
+    border: 0; border-radius: 12px; background: transparent; cursor: pointer; color: var(--muted);
+  }
+  .dots button::before {
+    content: ""; width: 8px; height: 8px; border-radius: 50%; background: currentColor; opacity: .55;
+    transition: transform .3s, opacity .3s, background .3s;
+  }
+  .dots button:hover::before { opacity: 1; }
+  .dots button[aria-current="true"] { color: var(--gold-text); }
+  .dots button[aria-current="true"]::before { transform: scale(1.5); opacity: 1; }
+  @media (max-width: 760px) { .js .slide { padding-right: 48px; } .dots { right: 4px; } }
+
+  /* ============ ヒーロー ============ */
+  .hero { text-align: center; perspective: 1100px; }
+  .hero-inner { position: relative; transform-style: preserve-3d; will-change: transform; }
+  .hero-inner::before {
+    content: ""; position: absolute; inset: -12% -8%;
+    background: radial-gradient(closest-side, var(--halo), transparent);
+    transform: translateZ(-60px); z-index: -1;
+  }
+  .eyebrow {
+    display: inline-block; letter-spacing: .3em; font-size: .78rem; color: var(--muted);
+    border: 1px solid var(--line); border-radius: 999px; padding: 4px 16px 4px 20px; background: var(--panel);
+  }
+  h1 {
+    margin: 20px 0 16px; font-size: clamp(2rem, 8vw, 4.6rem); line-height: 1.25; font-weight: 900;
+    letter-spacing: .02em; text-wrap: balance; text-shadow: var(--h1-shadow);
+  }
+  h1 .nb { white-space: nowrap; }
+  h1 .v51 { text-shadow: var(--h1-51); }
+  h1 .v52 { text-shadow: var(--h1-52); }
+  .lead { max-width: 40em; margin: 0 auto; color: var(--soft); font-size: clamp(.95rem, 2.6vw, 1.08rem); }
+  .lead a { color: var(--gold-text); font-weight: 700; text-underline-offset: 4px; }
+  .nav { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin: 28px 0 0; padding: 0; list-style: none; }
+  .nav a {
+    display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 6px 18px;
+    border-radius: 22px; text-decoration: none; font-weight: 700; font-size: .92rem;
+    background: var(--panel); border: 1px solid var(--line);
+    transition: transform .25s, border-color .25s, background .25s;
+  }
+  .nav a:hover { transform: translateY(-3px); border-color: var(--text); background: var(--card-hover); }
+  .nav .n { color: var(--gold-text); font-size: .78rem; }
+  .hint { margin-top: 30px; color: var(--muted); font-size: .8rem; letter-spacing: .12em; animation: bob 2.2s ease-in-out infinite; }
+  @keyframes bob { 50% { transform: translateY(8px); opacity: .55; } }
+
+  /* ============ 見出し ============ */
+  .sec-head { display: flex; align-items: center; gap: 16px; margin-bottom: clamp(10px, 2.4vh, 24px); }
+  .sec-num {
+    font-size: clamp(2.2rem, 7vw, 3.6rem); font-weight: 900; line-height: 1; flex: none;
+    color: transparent; -webkit-text-stroke: 1.5px var(--muted);
+  }
+  .sec-head h2 { margin: 0; font-size: clamp(1.25rem, 4.2vw, 1.9rem); line-height: 1.4; }
+  .sec-head p { margin: 2px 0 0; color: var(--muted); font-size: .92rem; line-height: 1.5; }
+  .grow { flex: 1; min-width: 0; }
+
+  /* ============ パネルとカード(枠は全周で同じ太さ・同じ書式) ============ */
+  .panel {
+    --rin: var(--rc);
+    padding: var(--g); border-radius: calc(var(--rin) + var(--g));
+    background: var(--panel); border: 1px solid var(--line);
+    -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+    box-shadow: 0 20px 50px var(--shadow);
+  }
+  .panel.shots { --rin: var(--rs); }
+  .model-tag { display: flex; align-items: center; gap: 10px; font-weight: 900; font-size: 1.1rem; margin: 2px 4px calc(var(--g) * .8); line-height: 1.3; }
+  .model-tag::before { content: ""; width: 12px; height: 12px; border-radius: 50%; background: currentColor; flex: none; }
+  .m51 { --accent: var(--c51); --tint: var(--tint51); }
+  .m52 { --accent: var(--c52); --tint: var(--tint52); }
+  .m51 .model-tag { color: var(--c51); }
+  .m52 .model-tag { color: var(--c52); }
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: var(--g); }
+
+  .card {
+    padding: var(--g); border-radius: var(--rc);
+    background: var(--card); border: 1px solid var(--line);
+  }
+  .m51 .card, .m52 .card, .card.m51, .card.m52 { background: linear-gradient(var(--tint), var(--tint)), var(--card); border-color: var(--accent); }
+
+  .tilt {
+    --rx: 0deg; --ry: 0deg; --mx: 50%; --my: 50%;
+    position: relative; transform: perspective(800px) rotateX(var(--rx)) rotateY(var(--ry));
+    transition: transform .35s ease-out, background .25s, border-color .25s, box-shadow .35s;
+  }
+  .tilt.moving { transition: transform .06s linear, background .25s, border-color .25s, box-shadow .35s; }
+  .tilt::after {
+    content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+    background: radial-gradient(240px circle at var(--mx) var(--my), rgba(255,255,255,.16), transparent 60%);
+    opacity: 0; transition: opacity .3s;
+  }
+  .tilt:hover::after { opacity: 1; }
+
+  /* ---------- 01 マリオ ---------- */
+  .cube-box { width: 64px; height: 64px; perspective: 500px; flex: none; }
+  .cube { --s: 48px; width: var(--s); height: var(--s); margin: 8px; position: relative; transform-style: preserve-3d; transform: rotateX(-22deg) rotateY(35deg); animation: spin 7s linear infinite; }
+  .cube i {
+    position: absolute; inset: 0; display: grid; place-items: center;
+    font: 900 28px/1 ui-monospace, Menlo, Consolas, monospace; font-style: normal; color: #6b3a00;
+    background: linear-gradient(145deg, #ffd96a, #f2a51c); border: 3px solid #8a4b00; border-radius: 6px;
+  }
+  .cube i:nth-child(1) { transform: translateZ(calc(var(--s) / 2)); }
+  .cube i:nth-child(2) { transform: rotateY(90deg) translateZ(calc(var(--s) / 2)); }
+  .cube i:nth-child(3) { transform: rotateY(180deg) translateZ(calc(var(--s) / 2)); }
+  .cube i:nth-child(4) { transform: rotateY(-90deg) translateZ(calc(var(--s) / 2)); }
+  .cube i:nth-child(5) { transform: rotateX(90deg) translateZ(calc(var(--s) / 2)); }
+  .cube i:nth-child(6) { transform: rotateX(-90deg) translateZ(calc(var(--s) / 2)); }
+  @keyframes spin { from { transform: rotateX(-22deg) rotateY(0deg); } to { transform: rotateX(-22deg) rotateY(360deg); } }
+
+  .keys { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; margin: 0 0 clamp(10px, 2.4vh, 20px); color: var(--soft); font-size: .95rem; }
+  .keys .grp { display: inline-flex; align-items: center; gap: 6px; }
+  kbd {
+    display: inline-grid; place-items: center; min-width: 34px; height: 34px; padding: 0 9px;
+    font: 700 .85rem/1 ui-monospace, Menlo, Consolas, monospace; color: var(--text);
+    background: var(--card); border: 1px solid var(--line); border-radius: 9px;
+  }
+  .runs { display: grid; grid-template-columns: 1fr 1fr; gap: var(--g); }
+  .run { display: block; text-decoration: none; min-height: 128px; }
+  .run:hover { background: linear-gradient(var(--tint), var(--tint)), var(--card-hover); box-shadow: 0 16px 36px var(--shadow); }
+  .run .t { display: block; font-size: 1.3rem; font-weight: 900; line-height: 1.3; }
+  .run .path { display: block; font-size: .72rem; color: var(--muted); word-break: break-all; line-height: 1.5; margin-top: 4px; }
+  .go {
+    display: inline-flex; align-items: center; height: calc(var(--r1) * 2); margin-top: 12px; padding: 0 14px;
+    font-weight: 800; font-size: .88rem; color: var(--on-accent); background: var(--accent); border-radius: var(--r1);
+  }
+
+  /* ---------- 02 ペリカン ---------- */
+  .shot { --pad: var(--pad-shot); margin: 0; padding: var(--pad-shot); border-radius: var(--rs); background: var(--card); border: 1px solid var(--line); }
+  .shot .pic { display: block; border-radius: var(--r-pic); overflow: hidden; background: var(--pic-bg); aspect-ratio: 4 / 3; }
+  .shot img { width: 100%; height: 100%; object-fit: contain; color: #333; font-size: .8rem; }
+  .shot figcaption { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 2px 8px; padding: 6px 4px 0; font-size: .84rem; line-height: 1.5; }
+  .shot .rn { font-weight: 800; }
+  .shot .src { display: inline-flex; align-items: center; min-height: 32px; font-weight: 700; color: var(--accent); text-underline-offset: 4px; }
+  .pair { display: grid; grid-template-columns: 1fr 1fr; gap: var(--g); }
+  .pair > * { min-width: 0; }
+
+  /* ---------- 03 バグ修正 ---------- */
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--g); margin-bottom: var(--g); }
+  .stat { text-align: center; padding: 18px 8px 14px; }
+  .stat .num { display: block; font-size: clamp(1.8rem, 6vw, 2.8rem); font-weight: 900; line-height: 1.1; font-variant-numeric: tabular-nums; }
+  .stat .num small { font-size: .4em; font-weight: 700; margin-left: 2px; color: var(--muted); }
+  .stat .lbl { display: block; color: var(--muted); font-size: .84rem; margin-top: 4px; line-height: 1.5; }
+  .stat.good .num { color: var(--ok); }
+  .passes { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--g); margin: 0 0 var(--g); padding: 0; list-style: none; }
+  .passes li { display: flex; flex-direction: column; gap: 2px; padding: 10px 12px; font-size: .86rem; line-height: 1.5; border-radius: var(--rc); background: linear-gradient(var(--tint), var(--tint)), var(--card); border: 1px solid var(--accent); }
+  .passes b { font-size: .92rem; color: var(--accent); }
+  .passes .ok { color: var(--ok); font-weight: 800; }
+  .note { margin: 0 4px var(--g); color: var(--soft); }
+  .btn {
+    display: inline-flex; align-items: center; gap: 10px; min-height: 48px; max-width: 100%; padding: 10px 22px;
+    border-radius: var(--rc); text-decoration: none; font-weight: 800;
+    background: var(--card); border: 1px solid var(--line); transition: transform .25s, box-shadow .25s, border-color .25s;
+  }
+  .btn:hover { transform: translateY(-3px); border-color: var(--text); box-shadow: 0 12px 26px var(--shadow); }
+  .url { display: block; margin: 8px 4px 2px; font-size: .74rem; color: var(--muted); word-break: break-all; line-height: 1.5; }
+
+  /* ---------- グラフ(html-parts の「伸びる横棒」「2系列の並び棒」と同じ表現) ---------- */
+  .legend { display: flex; flex-wrap: wrap; gap: 6px 22px; margin: 0 2px 12px; font-size: .9rem; color: var(--soft); }
+  .legend span { display: inline-flex; align-items: center; gap: 8px; }
+  .legend i { width: 18px; height: 18px; border-radius: 6px; background: var(--c); }
+  .charts { display: grid; grid-template-columns: 1fr 1fr; gap: var(--g); }
+  .chart-card { padding: var(--g); border-radius: var(--rchart); background: var(--panel); border: 1px solid var(--line); }
+  .chart-card h3 { margin: 0 0 8px 2px; font-size: 1rem; line-height: 1.4; }
+  .row { display: grid; grid-template-columns: 4.6em 1fr 5.4em; align-items: center; gap: 8px; margin-top: 6px; font-size: .82rem; }
+  .row .nm { font-weight: 800; white-space: nowrap; }
+  .row .val { text-align: right; font-weight: 800; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .track { height: calc(var(--rtrack) * 2); padding: var(--tp); border-radius: var(--rtrack); background: var(--track); }
+  .fill { display: block; height: 100%; width: 0; border-radius: var(--rfill); background: var(--accent); min-width: 6px; transition: width .9s cubic-bezier(.2,.8,.2,1); }
+  .js .slide[data-pos="cur"] .fill { width: var(--w); transition-delay: calc(.5s + var(--k, 0) * .1s); }
+  html:not(.js) .fill { width: var(--w); }
+  .foot-note { margin: 12px 4px 0; color: var(--muted); font-size: .8rem; line-height: 1.6; }
+
+  /* ---------- 表 ---------- */
+  .tbl-wrap { border-radius: var(--rc); overflow: hidden; border: 1px solid var(--line); background: var(--panel); }
+  table { border-collapse: collapse; width: 100%; font-size: clamp(.78rem, 2.2vw, 1rem); font-variant-numeric: tabular-nums; }
+  th, td { border: 1px solid var(--line); padding: 8px 6px; text-align: center; line-height: 1.4; }
+  .tbl-wrap table { margin: -1px; width: calc(100% + 2px); }
+  th { font-weight: 800; }
+  th.row-h, td.row-h { text-align: left; font-weight: 700; padding-left: 10px; }
+  th.h51, td.c51 { color: var(--c51); background: var(--tint51); }
+  th.h52, td.c52 { color: var(--c52); background: var(--tint52); }
+  td.c51, td.c52 { color: var(--text); }
+  th.sub { font-size: .85em; font-weight: 700; }
+  td small { display: block; color: var(--muted); font-size: .8em; }
+  td.ok { color: var(--ok); font-weight: 800; }
+  td .nbr { white-space: nowrap; }
+
+  /* ---------- 結果へのリンク ---------- */
+  .result-card {
+    display: flex; align-items: center; justify-content: space-between; gap: 16px; text-decoration: none;
+    padding: var(--g) var(--g) var(--g) calc(var(--g) * 2);
+    border-radius: 999px;   /* 矢印の丸と同心円:高さ = 丸 + 余白 × 2 なので、半径はちょうど高さの半分 */
+    background: linear-gradient(120deg, var(--tint51), var(--tint52)), var(--panel);
+    border: 1px solid var(--line); box-shadow: 0 24px 60px var(--shadow);
+  }
+  .result-card:hover { border-color: var(--text); }
+  .result-card .big { display: block; font-size: clamp(1.2rem, 4.6vw, 1.9rem); font-weight: 900; line-height: 1.3; }
+  .result-card .sub { display: block; color: var(--soft); font-size: .92rem; line-height: 1.4; margin-top: 2px; }
+  .arrow {
+    flex: none; align-self: stretch; height: auto; min-height: var(--arrow); aspect-ratio: 1 / 1; border-radius: 50%; display: grid; place-items: center;
+    font-size: 1.6rem; font-weight: 900; line-height: 1; color: var(--on-gold); background: var(--gold);
+    animation: glow 1.8s ease-in-out infinite;
+  }
+  @keyframes glow { 50% { box-shadow: 0 0 0 8px rgba(255, 201, 74, .28); } }
+  .links { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
+  .links a { color: var(--soft); font-size: .9rem; }
+
+  /* ---------- スマホ・低い画面 ---------- */
+  @media (max-width: 760px) {
+    .two { grid-template-columns: 1fr; }
+    .stats, .passes { grid-template-columns: 1fr 1fr; }
+    .charts { grid-template-columns: 1fr; }
+    .sec-head { gap: 12px; }
+    .sec-num { font-size: 2.2rem; }
+  }
+  @media (max-width: 480px) {
+    .run { min-height: 0; }
+    .run .t { font-size: 1.1rem; }
+    .cube-box { width: 52px; height: 52px; }
+    .cube { --s: 38px; margin: 7px; }
+    .cube i { font-size: 22px; }
+    .stat { padding: 12px 6px 10px; }
+    .row { grid-template-columns: 4.2em 1fr 5em; gap: 6px; margin-top: 4px; font-size: .76rem; }
+    .chart-card h3 { font-size: .92rem; margin-bottom: 4px; }
+    th, td { padding: 6px 3px; }
+    th.row-h, td.row-h { padding-left: 6px; }
+    .shot figcaption { font-size: .78rem; }
+    .model-tag { font-size: 1rem; }
+  }
+  @media (max-height: 760px) {
+    .sec-head p { display: none; }
+    .stat { padding: 12px 8px 10px; }
+    .run { min-height: 0; }
+    th, td { padding-top: 5px; padding-bottom: 5px; }
+  }
+
+  /* ---------- 動きを抑える設定 ---------- */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; }
+    .js .slide { transition: opacity .25s ease, visibility 0s linear .25s !important; }
+    .js .slide[data-pos="prev"], .js .slide[data-pos="next"] { transform: none; }
+    .js .slide[data-pos="cur"] { transition-delay: 0s !important; }
+    .js .rv, .js .slide[data-pos="cur"] .rv { transform: none; transition: none; opacity: 1; }
+    .fill { transition: none !important; }
+    .tilt { transform: none !important; transition: none !important; }
+    .nav a:hover, .btn:hover { transform: none; }
+  }
+</style>
+</head>
+<body>
+<canvas id="bg" aria-hidden="true"></canvas>
+
+<main class="stage" id="stage">
+
+  <!-- 0 ヒーロー -->
+  <section class="slide" id="top" data-title="はじめに">
+    <div class="inner hero">
+      <div class="hero-inner" id="heroInner">
+        <span class="eyebrow rv" style="--i:0">COMPARISON LOG</span>
+        <h1 class="rv" style="--i:1"><span class="nb">Fable <span class="v51">5.1</span> と</span> <span class="nb"><span class="v52">5.2</span> の比較</span></h1>
+        <p class="lead rv" style="--i:2">同じ指示文を、Fable 5.1 と Fable 5.2 に2回ずつ渡して、出来を比べた記録です。数字の一覧は <a href="results.html">results.html</a> にあります。</p>
+        <ul class="nav rv" style="--i:3">
+          <li><a href="#mario"><span class="n">01</span>マリオ1-1風のゲーム</a></li>
+          <li><a href="#pelican"><span class="n">02</span>自転車に乗るペリカン</a></li>
+          <li><a href="#bugfix"><span class="n">03</span>バグ修正</a></li>
+          <li><a href="#time"><span class="n">04</span>時間・費用・数字の比較</a></li>
+          <li><a href="#results"><span class="n">05</span>結果の数字</a></li>
+        </ul>
+        <div class="hint rv" style="--i:4" aria-hidden="true">▼ ホイール・矢印キー・スワイプで進みます</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 1 マリオ -->
+  <section class="slide" id="mario" data-title="マリオ">
+    <div class="inner">
+      <div class="sec-head rv" style="--i:0">
+        <span class="sec-num" aria-hidden="true">01</span>
+        <div class="grow"><h2>マリオ1-1風のゲーム</h2><p>4本とも、ブラウザでそのまま遊べます。</p></div>
+        <div class="cube-box" aria-hidden="true"><div class="cube"><i>?</i><i>?</i><i>?</i><i>?</i><i></i><i></i></div></div>
+      </div>
+      <p class="keys rv" style="--i:1">
+        <span>操作:</span>
+        <span class="grp"><kbd>←</kbd><kbd>→</kbd> 矢印キーで移動</span>
+        <span class="grp"><kbd>Space</kbd> か <kbd>Z</kbd> でジャンプ</span>
+      </p>
+      <div class="two">
+        <div class="panel m51 rv" style="--i:2">
+          <h3 class="model-tag">Fable 5.1</h3>
+          <div class="runs">
+            <a class="card run tilt" href="mario/fable-5-1_run1.html"><span class="t">1回目</span><span class="path mono">mario/fable-5-1_run1.html</span><span class="go">あそぶ →</span></a>
+            <a class="card run tilt" href="mario/fable-5-1_run2.html"><span class="t">2回目</span><span class="path mono">mario/fable-5-1_run2.html</span><span class="go">あそぶ →</span></a>
+          </div>
+        </div>
+        <div class="panel m52 rv" style="--i:3">
+          <h3 class="model-tag">Fable 5.2</h3>
+          <div class="runs">
+            <a class="card run tilt" href="mario/fable-5-2_run1.html"><span class="t">1回目</span><span class="path mono">mario/fable-5-2_run1.html</span><span class="go">あそぶ →</span></a>
+            <a class="card run tilt" href="mario/fable-5-2_run2.html"><span class="t">2回目</span><span class="path mono">mario/fable-5-2_run2.html</span><span class="go">あそぶ →</span></a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2 ペリカン -->
+  <section class="slide" id="pelican" data-title="ペリカン">
+    <div class="inner">
+      <div class="sec-head rv" style="--i:0">
+        <span class="sec-num" aria-hidden="true">02</span>
+        <div class="grow"><h2>自転車に乗るペリカン(SVGの絵)</h2><p>左が 5.1、右が 5.2。画像を押すと大きく開きます。</p></div>
+      </div>
+      <div class="two">
+        <div class="panel shots m51 rv" style="--i:1">
+          <h3 class="model-tag">Fable 5.1</h3>
+          <div class="pair">
+            <figure class="shot"><a class="pic" href="images/svg_fable-5-1_run1.png"><img src="images/svg_fable-5-1_run1.png" alt="Fable 5.1 の1回目が描いた、自転車に乗るペリカン" loading="lazy"></a><figcaption><span class="rn">1回目</span><a class="src" href="svg/fable-5-1_run1.svg">SVG元ファイル</a></figcaption></figure>
+            <figure class="shot"><a class="pic" href="images/svg_fable-5-1_run2.png"><img src="images/svg_fable-5-1_run2.png" alt="Fable 5.1 の2回目が描いた、自転車に乗るペリカン" loading="lazy"></a><figcaption><span class="rn">2回目</span><a class="src" href="svg/fable-5-1_run2.svg">SVG元ファイル</a></figcaption></figure>
+          </div>
+        </div>
+        <div class="panel shots m52 rv" style="--i:2">
+          <h3 class="model-tag">Fable 5.2</h3>
+          <div class="pair">
+            <figure class="shot"><a class="pic" href="images/svg_fable-5-2_run1.png"><img src="images/svg_fable-5-2_run1.png" alt="Fable 5.2 の1回目が描いた、自転車に乗るペリカン" loading="lazy"></a><figcaption><span class="rn">1回目</span><a class="src" href="svg/fable-5-2_run1.svg">SVG元ファイル</a></figcaption></figure>
+            <figure class="shot"><a class="pic" href="images/svg_fable-5-2_run2.png"><img src="images/svg_fable-5-2_run2.png" alt="Fable 5.2 の2回目が描いた、自転車に乗るペリカン" loading="lazy"></a><figcaption><span class="rn">2回目</span><a class="src" href="svg/fable-5-2_run2.svg">SVG元ファイル</a></figcaption></figure>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3 バグ修正 -->
+  <section class="slide" id="bugfix" data-title="バグ修正">
+    <div class="inner">
+      <div class="sec-head rv" style="--i:0">
+        <span class="sec-num" aria-hidden="true">03</span>
+        <div class="grow"><h2>バグ修正</h2><p>約185行のコードにバグ14個、テスト31本。</p></div>
+      </div>
+      <div class="panel rv" style="--i:1">
+        <div class="stats">
+          <div class="card stat tilt"><span class="num">約<span data-count="185">185</span><small>行</small></span><span class="lbl">コードの長さ</span></div>
+          <div class="card stat tilt"><span class="num"><span data-count="14">14</span><small>個</small></span><span class="lbl">仕込まれたバグ</span></div>
+          <div class="card stat tilt"><span class="num"><span data-count="31">31</span><small>本</small></span><span class="lbl">テスト</span></div>
+          <div class="card stat tilt good"><span class="num"><span data-count="4">4</span><small>/ 4本</small></span><span class="lbl">全部直して全テスト通過</span></div>
+        </div>
+        <ul class="passes">
+          <li class="m51"><b>Fable 5.1 1回目</b><span class="ok">✓ テスト全部通過</span></li>
+          <li class="m51"><b>Fable 5.1 2回目</b><span class="ok">✓ テスト全部通過</span></li>
+          <li class="m52"><b>Fable 5.2 1回目</b><span class="ok">✓ テスト全部通過</span></li>
+          <li class="m52"><b>Fable 5.2 2回目</b><span class="ok">✓ テスト全部通過</span></li>
+        </ul>
+        <p class="note">4本とも、全部直してテストが全部通った。小さい課題は <code>bugfix-small</code> フォルダにあります。</p>
+        <a class="btn" href="https://github.com/monacacao/fable52-comparison/tree/main/bugfix" target="_blank" rel="noopener">GitHub でコードを見る ↗</a>
+        <span class="url mono">https://github.com/monacacao/fable52-comparison/tree/main/bugfix</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4 生成時間(グラフ) -->
+  <section class="slide" id="time" data-title="生成時間のグラフ">
+    <div class="inner">
+      <div class="sec-head rv" style="--i:0">
+        <span class="sec-num" aria-hidden="true">04</span>
+        <div class="grow"><h2>生成時間の比べ(短いほど速い)</h2><p>課題ごとに、いちばん長かった回を100%の長さにしています。</p></div>
+      </div>
+      <div class="legend rv" style="--i:1"><span><i style="--c:var(--c51)"></i>Fable 5.1</span><span><i style="--c:var(--c52)"></i>Fable 5.2</span></div>
+      <div class="charts">
+        <div class="chart-card rv" style="--i:2"><h3>マリオ1-1風のゲーム</h3>
+          <div class="row m51"><span class="nm">5.1 1回目</span><span class="track"><span class="fill" style="--w:91.9%;--k:0"></span></span><span class="val">18分24秒</span></div>
+          <div class="row m51"><span class="nm">5.1 2回目</span><span class="track"><span class="fill" style="--w:100.0%;--k:1"></span></span><span class="val">20分1秒</span></div>
+          <div class="row m52"><span class="nm">5.2 1回目</span><span class="track"><span class="fill" style="--w:16.6%;--k:2"></span></span><span class="val">3分19秒</span></div>
+          <div class="row m52"><span class="nm">5.2 2回目</span><span class="track"><span class="fill" style="--w:16.3%;--k:3"></span></span><span class="val">3分16秒</span></div>
+        </div>
+        <div class="chart-card rv" style="--i:3"><h3>SVGの絵(ペリカン)</h3>
+          <div class="row m51"><span class="nm">5.1 1回目</span><span class="track"><span class="fill" style="--w:100.0%;--k:0"></span></span><span class="val">96秒</span></div>
+          <div class="row m51"><span class="nm">5.1 2回目</span><span class="track"><span class="fill" style="--w:83.3%;--k:1"></span></span><span class="val">80秒</span></div>
+          <div class="row m52"><span class="nm">5.2 1回目</span><span class="track"><span class="fill" style="--w:69.8%;--k:2"></span></span><span class="val">67秒</span></div>
+          <div class="row m52"><span class="nm">5.2 2回目</span><span class="track"><span class="fill" style="--w:71.9%;--k:3"></span></span><span class="val">69秒</span></div>
+        </div>
+        <div class="chart-card rv" style="--i:4"><h3>バグ修正(大きめ)</h3>
+          <div class="row m51"><span class="nm">5.1 1回目</span><span class="track"><span class="fill" style="--w:50.5%;--k:0"></span></span><span class="val">47秒</span></div>
+          <div class="row m51"><span class="nm">5.1 2回目</span><span class="track"><span class="fill" style="--w:100.0%;--k:1"></span></span><span class="val">93秒</span></div>
+          <div class="row m52"><span class="nm">5.2 1回目</span><span class="track"><span class="fill" style="--w:30.1%;--k:2"></span></span><span class="val">28秒</span></div>
+          <div class="row m52"><span class="nm">5.2 2回目</span><span class="track"><span class="fill" style="--w:29.0%;--k:3"></span></span><span class="val">27秒</span></div>
+        </div>
+        <div class="chart-card rv" style="--i:5"><h3>バグ修正(小さめ)</h3>
+          <div class="row m51"><span class="nm">5.1 1回目</span><span class="track"><span class="fill" style="--w:100.0%;--k:0"></span></span><span class="val">28秒</span></div>
+          <div class="row m51"><span class="nm">5.1 2回目</span><span class="track"><span class="fill" style="--w:96.4%;--k:1"></span></span><span class="val">27秒</span></div>
+          <div class="row m52"><span class="nm">5.2 1回目</span><span class="track"><span class="fill" style="--w:42.9%;--k:2"></span></span><span class="val">12秒</span></div>
+          <div class="row m52"><span class="nm">5.2 2回目</span><span class="track"><span class="fill" style="--w:46.4%;--k:3"></span></span><span class="val">13秒</span></div>
+        </div>
+      </div>
+      <p class="foot-note rv" style="--i:6">マリオとSVGは4本同時の実行なので、時間には並列実行の影響が入っている可能性があります。</p>
+    </div>
+  </section>
+
+  <!-- 5 費用(グラフ) -->
+  <section class="slide" id="cost" data-title="費用のグラフ">
+    <div class="inner">
+      <div class="sec-head rv" style="--i:0">
+        <span class="sec-num" aria-hidden="true">05</span>
+        <div class="grow"><h2>費用の比べ(安いほど良い)</h2><p>課題ごとに、いちばん高かった回を100%の長さにしています。</p></div>
+      </div>
+      <div class="legend rv" style="--i:1"><span><i style="--c:var(--c51)"></i>Fable 5.1</span><span><i style="--c:var(--c52)"></i>Fable 5.2</span></div>
+      <div class="charts">
+        <div class="chart-card rv" style="--i:2"><h3>マリオ1-1風のゲーム</h3>
+          <div class="row m51"><span class="nm">5.1 1回目</span><span class="track"><span class="fill" style="--w:84.3%;--k:0"></span></span><span class="val">1.50ドル</span></div>
+          <div class="row m51"><span class="nm">5.1 2回目</span><span class="track"><span class="fill" style="--w:100.0%;--k:1"></span></span><span class="val">1.78ドル</span></div>
+          <div class="row m52"><span class="nm">5.2 1回目</span><span class="track"><span class="fill" style="--w:11.8%;--k:2"></span></span><span class="val">0.21ドル</span></div>
+          <div class="row m52"><span class="nm">5.2 2回目</span><span class="track"><span class="fill" style="--w:11.8%;--k:3"></span></span><span class="val">0.21ドル</span></div>
+        </div>
+        <div class="chart-card rv" style="--i:3"><h3>SVGの絵(ペリカン)</h3>
+          <div class="row m51"><span class="nm">5.1 1回目</span><span class="track"><span class="fill" style="--w:100.0%;--k:0"></span></span><span class="val">0.41ドル</span></div>
+          <div class="row m51"><span class="nm">5.1 2回目</span><span class="track"><span class="fill" style="--w:87.8%;--k:1"></span></span><span class="val">0.36ドル</span></div>
+          <div class="row m52"><span class="nm">5.2 1回目</span><span class="track"><span class="fill" style="--w:17.1%;--k:2"></span></span><span class="val">0.07ドル</span></div>
+          <div class="row m52"><span class="nm">5.2 2回目</span><span class="track"><span class="fill" style="--w:19.5%;--k:3"></span></span><span class="val">0.08ドル</span></div>
+        </div>
+        <div class="chart-card rv" style="--i:4"><h3>バグ修正(大きめ)</h3>
+          <div class="row m51"><span class="nm">5.1 1回目</span><span class="track"><span class="fill" style="--w:53.6%;--k:0"></span></span><span class="val">0.30ドル</span></div>
+          <div class="row m51"><span class="nm">5.1 2回目</span><span class="track"><span class="fill" style="--w:100.0%;--k:1"></span></span><span class="val">0.56ドル</span></div>
+          <div class="row m52"><span class="nm">5.2 1回目</span><span class="track"><span class="fill" style="--w:10.7%;--k:2"></span></span><span class="val">0.06ドル</span></div>
+          <div class="row m52"><span class="nm">5.2 2回目</span><span class="track"><span class="fill" style="--w:10.7%;--k:3"></span></span><span class="val">0.06ドル</span></div>
+        </div>
+        <div class="chart-card rv" style="--i:5"><h3>バグ修正(小さめ)</h3>
+          <div class="row m51"><span class="nm">5.1 1回目</span><span class="track"><span class="fill" style="--w:100.0%;--k:0"></span></span><span class="val">0.19ドル</span></div>
+          <div class="row m51"><span class="nm">5.1 2回目</span><span class="track"><span class="fill" style="--w:100.0%;--k:1"></span></span><span class="val">0.19ドル</span></div>
+          <div class="row m52"><span class="nm">5.2 1回目</span><span class="track"><span class="fill" style="--w:15.8%;--k:2"></span></span><span class="val">0.03ドル</span></div>
+          <div class="row m52"><span class="nm">5.2 2回目</span><span class="track"><span class="fill" style="--w:15.8%;--k:3"></span></span><span class="val">0.03ドル</span></div>
+        </div>
+      </div>
+      <p class="foot-note rv" style="--i:6">為替は1ドル=158円です(results.md の記載)。</p>
+    </div>
+  </section>
+
+  <!-- 6 表:時間と費用 -->
+  <section class="slide" id="table-cost" data-title="表:時間と費用">
+    <div class="inner">
+      <div class="sec-head rv" style="--i:0">
+        <span class="sec-num" aria-hidden="true">06</span>
+        <div class="grow"><h2>表で見る 生成時間と費用</h2><p>2026年11月10日の実測。5.1 と 5.2、各2回分。</p></div>
+      </div>
+      <div class="tbl-wrap rv" style="--i:1">
+<table><tr><th class="row-h" rowspan="2">項目</th><th class="h51" colspan="2">Fable 5.1</th><th class="h52" colspan="2">Fable 5.2</th></tr><tr><th class="sub h51">1回目</th><th class="sub h51">2回目</th><th class="sub h52">1回目</th><th class="sub h52">2回目</th></tr><tr><th scope="row" class="row-h">マリオ1-1風のゲーム</th><td class="c51"><span class="nbr">18分24秒</span><small>1.50ドル(約237円)</small></td><td class="c51"><span class="nbr">20分1秒</span><small>1.78ドル(約281円)</small></td><td class="c52"><span class="nbr">3分19秒</span><small>0.21ドル(約33円)</small></td><td class="c52"><span class="nbr">3分16秒</span><small>0.21ドル(約33円)</small></td></tr><tr><th scope="row" class="row-h">SVGの絵(ペリカン)</th><td class="c51"><span class="nbr">96秒</span><small>0.41ドル(約65円)</small></td><td class="c51"><span class="nbr">80秒</span><small>0.36ドル(約57円)</small></td><td class="c52"><span class="nbr">67秒</span><small>0.07ドル(約11円)</small></td><td class="c52"><span class="nbr">69秒</span><small>0.08ドル(約13円)</small></td></tr><tr><th scope="row" class="row-h">バグ修正(大きめ)</th><td class="c51"><span class="nbr">47秒</span><small>0.30ドル(約47円)</small></td><td class="c51"><span class="nbr">93秒</span><small>0.56ドル(約88円)</small></td><td class="c52"><span class="nbr">28秒</span><small>0.06ドル(約9円)</small></td><td class="c52"><span class="nbr">27秒</span><small>0.06ドル(約9円)</small></td></tr><tr><th scope="row" class="row-h">バグ修正(小さめ)</th><td class="c51"><span class="nbr">28秒</span><small>0.19ドル(約30円)</small></td><td class="c51"><span class="nbr">27秒</span><small>0.19ドル(約30円)</small></td><td class="c52"><span class="nbr">12秒</span><small>0.03ドル(約5円)</small></td><td class="c52"><span class="nbr">13秒</span><small>0.03ドル(約5円)</small></td></tr></table>
+      </div>
+      <p class="foot-note rv" style="--i:2">円は、ドルに158円をかけて小数点以下を四捨五入した目安です。時間は、実行開始から完了までです。</p>
+    </div>
+  </section>
+
+  <!-- 7 表:出力トークン -->
+  <section class="slide" id="table-tokens" data-title="表:出力トークン">
+    <div class="inner">
+      <div class="sec-head rv" style="--i:0">
+        <span class="sec-num" aria-hidden="true">07</span>
+        <div class="grow"><h2>表で見る 出力トークンとコードの長さ</h2><p>数が少ないほど、短い出力で済んでいます。</p></div>
+      </div>
+      <div class="tbl-wrap rv" style="--i:1">
+<table><tr><th class="row-h" rowspan="2">項目</th><th class="h51" colspan="2">Fable 5.1</th><th class="h52" colspan="2">Fable 5.2</th></tr><tr><th class="sub h51">1回目</th><th class="sub h51">2回目</th><th class="sub h52">1回目</th><th class="sub h52">2回目</th></tr><tr><th scope="row" class="row-h">マリオ 出力トークン</th><td class="c51">29,221</td><td class="c51">35,318</td><td class="c52">20,816</td><td class="c52">20,524</td></tr><tr><th scope="row" class="row-h">マリオ うちthinking</th><td class="c51">18,357</td><td class="c51">23,798</td><td class="c52">8,539</td><td class="c52">8,664</td></tr><tr><th scope="row" class="row-h">マリオ HTMLの行数</th><td class="c51">424</td><td class="c51">471</td><td class="c52">598</td><td class="c52">598</td></tr><tr><th scope="row" class="row-h">ペリカン 出力トークン</th><td class="c51">6,538</td><td class="c51">5,443</td><td class="c52">6,413</td><td class="c52">6,680</td></tr><tr><th scope="row" class="row-h">バグ修正(大) 出力トークン</th><td class="c51">3,752</td><td class="c51">8,883</td><td class="c52">3,618</td><td class="c52">3,441</td></tr><tr><th scope="row" class="row-h">バグ修正(小) 出力トークン</th><td class="c51">1,720</td><td class="c51">1,737</td><td class="c52">1,239</td><td class="c52">1,256</td></tr></table>
+      </div>
+    </div>
+  </section>
+
+  <!-- 8 表:品質 -->
+  <section class="slide" id="table-quality" data-title="表:動作とテスト">
+    <div class="inner">
+      <div class="sec-head rv" style="--i:0">
+        <span class="sec-num" aria-hidden="true">08</span>
+        <div class="grow"><h2>表で見る 動いたか・直ったか</h2><p>4本とも同じ結果で、品質の差は出ていません。差は速さと費用です。</p></div>
+      </div>
+      <div class="tbl-wrap rv" style="--i:1">
+<table><tr><th class="row-h" rowspan="2">項目</th><th class="h51" colspan="2">Fable 5.1</th><th class="h52" colspan="2">Fable 5.2</th></tr><tr><th class="sub h51">1回目</th><th class="sub h51">2回目</th><th class="sub h52">1回目</th><th class="sub h52">2回目</th></tr><tr><th scope="row" class="row-h">マリオ 動作</th><td class="c51 ok">動いた</td><td class="c51 ok">動いた</td><td class="c52 ok">動いた</td><td class="c52 ok">動いた</td></tr><tr><th scope="row" class="row-h">マリオ JSエラー</th><td class="c51 ok">なし</td><td class="c51 ok">なし</td><td class="c52 ok">なし</td><td class="c52 ok">なし</td></tr><tr><th scope="row" class="row-h">バグ修正(大) 通ったテスト</th><td class="c51 ok">31/31</td><td class="c51 ok">31/31</td><td class="c52 ok">31/31</td><td class="c52 ok">31/31</td></tr><tr><th scope="row" class="row-h">バグ修正(大) 直したバグ</th><td class="c51 ok">14/14</td><td class="c51 ok">14/14</td><td class="c52 ok">14/14</td><td class="c52 ok">14/14</td></tr><tr><th scope="row" class="row-h">バグ修正(小) 通ったテスト</th><td class="c51 ok">8/8</td><td class="c51 ok">8/8</td><td class="c52 ok">8/8</td><td class="c52 ok">8/8</td></tr></table>
+      </div>
+      <p class="foot-note rv" style="--i:2">1回ずつの測定で、統計的な結論は出せません。</p>
+    </div>
+  </section>
+
+  <!-- 9 結果 -->
+  <section class="slide" id="results" data-title="結果の数字">
+    <div class="inner">
+      <div class="sec-head rv" style="--i:0">
+        <span class="sec-num" aria-hidden="true">09</span>
+        <div class="grow"><h2>結果の数字</h2><p>数字の一覧は別ページにまとめてあります。</p></div>
+      </div>
+      <div class="rv" style="--i:1">
+        <a class="result-card tilt" href="results.html">
+          <span>
+            <span class="big">results.html を開く</span>
+            <span class="sub">Fable 5.1 と 5.2、それぞれ2回分の数字の一覧</span>
+          </span>
+          <span class="arrow" aria-hidden="true">→</span>
+        </a>
+      </div>
+      <p class="links rv" style="--i:2"><a href="index.html">← トップへ</a></p>
+    </div>
+  </section>
+
+</main>
+
+<nav class="dots" id="dots" aria-label="ページ位置"></nav>
+
+<script>
+(function () {
+  'use strict';
+  var root = document.documentElement;
+  root.classList.add('js');
+
+  var mq = window.matchMedia('(prefers-reduced-motion: reduce)');
+  var reduced = mq.matches;
+  var mqLight = window.matchMedia('(prefers-color-scheme: light)');
+  var finePointer = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+
+  var slides = [].slice.call(document.querySelectorAll('.slide'));
+  var N = slides.length;
+  var cur = -1;
+  var dotsEl = document.getElementById('dots');
+  var dotBtns = [];
+  var visual = 0;          // 背景用のなめらかなページ位置
+
+  /* ---------- ドット ---------- */
+  slides.forEach(function (s, i) {
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.setAttribute('aria-label', (i + 1) + '画面目 ' + s.getAttribute('data-title'));
+    b.title = s.getAttribute('data-title');
+    b.addEventListener('click', function () { go(i); });
+    dotsEl.appendChild(b);
+    dotBtns.push(b);
+  });
+
+  /* ---------- 数字のカウントアップ ---------- */
+  function countUp(el) {
+    var target = parseInt(el.getAttribute('data-count'), 10);
+    if (reduced || !window.requestAnimationFrame) { el.textContent = target; return; }
+    var start = null, dur = 1100;
+    function step(ts) {
+      if (start === null) start = ts;
+      var p = Math.min(1, (ts - start) / dur);
+      el.textContent = Math.round(target * (1 - Math.pow(1 - p, 3)));
+      if (p < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
+
+  /* ---------- 切り替え ---------- */
+  var lockUntil = 0;
+  var LOCK_MS = reduced ? 350 : 900;
+
+  function setPos(i) {
+    slides.forEach(function (s, k) {
+      s.setAttribute('data-pos', k < i ? 'prev' : (k > i ? 'next' : 'cur'));
+      if (k === i) s.removeAttribute('inert'); else s.setAttribute('inert', '');
+      s.setAttribute('aria-hidden', k === i ? 'false' : 'true');
+    });
+    dotBtns.forEach(function (b, k) {
+      if (k === i) b.setAttribute('aria-current', 'true'); else b.removeAttribute('aria-current');
+    });
+  }
+
+  function go(i, instant) {
+    i = Math.max(0, Math.min(N - 1, i));
+    if (i === cur) return;
+    var first = cur < 0;
+    cur = i;
+    lockUntil = performance.now() + (first || instant ? 0 : LOCK_MS);
+    setPos(i);
+    [].forEach.call(slides[i].querySelectorAll('[data-count]'), countUp);
+    try { history.replaceState(null, '', i === 0 ? location.pathname + location.search : '#' + slides[i].id); } catch (e) {}
+    if (reduced) drawStatic();
+  }
+  function next() { go(cur + 1); }
+  function prev() { go(cur - 1); }
+  function locked() { return performance.now() < lockUntil; }
+
+  /* ホイール:1回の操作で1画面。切り替え中と、慣性で流れ続ける間は無視する */
+  var lastWheel = 0, ignoring = false;
+  window.addEventListener('wheel', function (e) {
+    if (e.ctrlKey) return;
+    e.preventDefault();
+    var now = performance.now();
+    var gap = now - lastWheel;
+    lastWheel = now;
+    if (locked()) { ignoring = true; return; }
+    if (ignoring && gap < 110) return;       // 慣性の続き
+    ignoring = false;
+    var d = Math.abs(e.deltaY) >= Math.abs(e.deltaX) ? e.deltaY : e.deltaX;
+    if (Math.abs(d) < 4) return;
+    if (d > 0) next(); else prev();
+  }, { passive: false });
+
+  window.addEventListener('keydown', function (e) {
+    if (e.altKey || e.ctrlKey || e.metaKey) return;
+    var k = e.key;
+    var fwd = k === 'ArrowDown' || k === 'ArrowRight' || k === 'PageDown' || (k === ' ' && !e.shiftKey);
+    var back = k === 'ArrowUp' || k === 'ArrowLeft' || k === 'PageUp' || (k === ' ' && e.shiftKey);
+    if (fwd || back) {
+      e.preventDefault();
+      if (locked()) return;
+      if (fwd) next(); else prev();
+    } else if (k === 'Home') { e.preventDefault(); if (!locked()) go(0); }
+    else if (k === 'End') { e.preventDefault(); if (!locked()) go(N - 1); }
+  });
+
+  /* スワイプ */
+  var tY = null, tX = null;
+  window.addEventListener('touchstart', function (e) {
+    if (e.touches.length !== 1) { tY = null; return; }
+    tY = e.touches[0].clientY; tX = e.touches[0].clientX;
+  }, { passive: true });
+  window.addEventListener('touchmove', function (e) { e.preventDefault(); }, { passive: false });
+  window.addEventListener('touchend', function (e) {
+    if (tY === null) return;
+    var t = e.changedTouches[0];
+    var dy = t.clientY - tY, dx = t.clientX - tX;
+    tY = null;
+    if (locked()) return;
+    if (Math.abs(dy) > 44 && Math.abs(dy) > Math.abs(dx)) { if (dy < 0) next(); else prev(); }
+    else if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5) { if (dx < 0) next(); else prev(); }
+  }, { passive: true });
+
+  /* ページ内リンク(#mario など)は画面切り替えにする */
+  document.addEventListener('click', function (e) {
+    var a = e.target.closest && e.target.closest('a[href^="#"]');
+    if (!a) return;
+    var id = a.getAttribute('href').slice(1);
+    var idx = slides.findIndex(function (s) { return s.id === id; });
+    if (idx >= 0) { e.preventDefault(); go(idx); }
+  });
+  window.addEventListener('hashchange', function () {
+    var idx = slides.findIndex(function (s) { return '#' + s.id === location.hash; });
+    if (idx >= 0) go(idx);
+  });
+
+  /* ---------- カードの傾き ---------- */
+  if (finePointer) {
+    [].forEach.call(document.querySelectorAll('.tilt'), function (el) {
+      el.addEventListener('pointermove', function (e) {
+        if (reduced) return;
+        var r = el.getBoundingClientRect();
+        var x = (e.clientX - r.left) / r.width, y = (e.clientY - r.top) / r.height;
+        el.classList.add('moving');
+        el.style.setProperty('--ry', ((x - 0.5) * 12).toFixed(2) + 'deg');
+        el.style.setProperty('--rx', ((0.5 - y) * 10).toFixed(2) + 'deg');
+        el.style.setProperty('--mx', (x * 100).toFixed(1) + '%');
+        el.style.setProperty('--my', (y * 100).toFixed(1) + '%');
+      });
+      el.addEventListener('pointerleave', function () {
+        el.classList.remove('moving');
+        el.style.setProperty('--ry', '0deg');
+        el.style.setProperty('--rx', '0deg');
+      });
+    });
+  }
+
+  /* ---------- 背景:つながった2つの輪(5.1 と 5.2)の3D粒子 ---------- */
+  var cv = document.getElementById('bg');
+  var ctx = cv.getContext && cv.getContext('2d');
+  var heroInner = document.getElementById('heroInner');
+
+  var TAU = Math.PI * 2;
+  var W = 0, H = 0, dpr = 1, lastW = -1;
+  var pts = [], stars = [];
+  var tx = 0, ty = 0, px = 0, py = 0;
+  var rafId = 0;
+
+  function build() {
+    var n = window.innerWidth < 700 ? 520 : 1000, i;
+    pts = [];
+    for (i = 0; i < n * 2; i++) {
+      pts.push({ ring: i < n ? 0 : 1, u: Math.random() * TAU, v: Math.random() * TAU, s: 0.5 + Math.random(),
+        r: 0.16 + Math.pow(Math.random(), 0.6) * 0.16, size: 1 + Math.random() * 1.8 });
+    }
+    stars = [];
+    var m = window.innerWidth < 700 ? 150 : 300;
+    for (i = 0; i < m; i++) {
+      stars.push({ x: (Math.random() - 0.5) * 9, y: (Math.random() - 0.5) * 9, z: (Math.random() - 0.5) * 9, size: 0.6 + Math.random() * 1.4 });
+    }
+  }
+
+  function resize() {
+    if (!ctx) return;
+    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    W = window.innerWidth; H = window.innerHeight;
+    cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    if (W !== lastW) { build(); lastW = W; }
+    if (reduced) drawStatic();
+  }
+
+  function draw(t) {
+    var light = mqLight.matches;
+    var sc = visual;
+    var fade = Math.max(0.3, 1 - sc * 0.12);
+    var ay = t * 0.00022 + sc * 0.5 + px * 0.7;
+    var ax = 0.45 + Math.sin(t * 0.00017) * 0.18 + py * 0.5;
+    var cy_ = Math.cos(ay), sy_ = Math.sin(ay), cx_ = Math.cos(ax), sx_ = Math.sin(ax);
+    var cx = W / 2, cy = H * 0.44;
+    var scale = Math.min(W, H) * 0.3 * (1 + Math.min(sc, 4) * 0.12);
+    var D = 3.6, i, p, x, y, z, x2, y2, z2, f, s, a;
+    // ダークは光を足し合わせ、ライトは濃い色を重ねて、どちらでも見えるようにする
+    var c51 = light ? '#0a6a94' : '#5ad7ff', c52 = light ? '#c2490f' : '#ff8f5c';
+    var cst = light ? '#3b4a9a' : '#c9d6ff';
+    var amax = light ? 0.6 : 0.9, smul = light ? 1.25 : 1;
+
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.clearRect(0, 0, W, H);
+    ctx.globalCompositeOperation = light ? 'source-over' : 'lighter';
+
+    var sa = ay * 0.25, cs = Math.cos(sa), ss = Math.sin(sa);
+    ctx.fillStyle = cst;
+    for (i = 0; i < stars.length; i++) {
+      p = stars[i];
+      x2 = p.x * cs + p.z * ss; z2 = -p.x * ss + p.z * cs;
+      f = 6 / (6 + z2);
+      if (f <= 0 || f > 6) continue;
+      ctx.globalAlpha = Math.min(light ? 0.5 : 0.75, 0.2 * f * f * (light ? 1.4 : 1)) * fade;
+      s = p.size * f * smul;
+      ctx.fillRect(cx + x2 * f * scale * 0.9, cy + p.y * f * scale * 0.9, s, s);
+    }
+    for (i = 0; i < pts.length; i++) {
+      p = pts[i];
+      var u = p.u + t * 0.00028 * p.s;
+      var v = p.v + u * 3 + t * 0.0004;
+      var rr = 1 + p.r * Math.cos(v);
+      if (p.ring === 0) {
+        x = rr * Math.cos(u) - 0.55; y = rr * Math.sin(u); z = p.r * Math.sin(v);
+        if (i === 0) ctx.fillStyle = c51;
+      } else {
+        x = rr * Math.cos(u) + 0.55; y = p.r * Math.sin(v); z = rr * Math.sin(u);
+        if (pts[i - 1].ring === 0) ctx.fillStyle = c52;
+      }
+      x2 = x * cy_ + z * sy_; z2 = -x * sy_ + z * cy_;
+      y2 = y * cx_ - z2 * sx_; z2 = y * sx_ + z2 * cx_;
+      f = D / (D + z2);
+      a = (f - 0.62) * 1.5;
+      if (a <= 0) continue;
+      ctx.globalAlpha = Math.min(amax, a) * fade;
+      s = p.size * f * f * smul;
+      ctx.fillRect(cx + x2 * f * scale - s / 2, cy + y2 * f * scale - s / 2, s, s);
+    }
+    ctx.globalAlpha = 1;
+  }
+  function drawStatic() { visual = cur < 0 ? 0 : cur; if (ctx) draw(9000); }
+
+  function frame(t) {
+    rafId = 0;
+    px += (tx - px) * 0.06; py += (ty - py) * 0.06;
+    visual += (cur - visual) * 0.045;
+    draw(t);
+    if (heroInner && finePointer && cur === 0) {
+      heroInner.style.transform = 'rotateY(' + (px * 12).toFixed(2) + 'deg) rotateX(' + (-py * 9).toFixed(2) + 'deg)';
+    } else if (heroInner && heroInner.style.transform) { heroInner.style.transform = ''; }
+    start();
+  }
+  function start() { if (!ctx || reduced || document.hidden || rafId) return; rafId = requestAnimationFrame(frame); }
+  function stop() { if (rafId) { cancelAnimationFrame(rafId); rafId = 0; } }
+
+  window.addEventListener('pointermove', function (e) {
+    if (e.pointerType === 'touch') return;
+    tx = e.clientX / Math.max(1, W) - 0.5; ty = e.clientY / Math.max(1, H) - 0.5;
+  }, { passive: true });
+  window.addEventListener('resize', resize);
+  document.addEventListener('visibilitychange', function () { if (document.hidden) stop(); else start(); });
+
+  function onMotion() {
+    reduced = mq.matches;
+    LOCK_MS = reduced ? 350 : 900;
+    if (reduced) { stop(); if (heroInner) heroInner.style.transform = ''; drawStatic(); } else start();
+  }
+  function onScheme() { if (reduced) drawStatic(); }   // 動いているときは次のフレームで自然に切り替わる
+  [[mq, onMotion], [mqLight, onScheme]].forEach(function (p) {
+    if (p[0].addEventListener) p[0].addEventListener('change', p[1]); else if (p[0].addListener) p[0].addListener(p[1]);
+  });
+
+  /* ---------- 画面が低いときは、中身を縮めて1画面に収める ---------- */
+  function fit() {
+    slides.forEach(function (s) {
+      var inn = s.querySelector('.inner');
+      inn.style.transform = '';
+      var cs = getComputedStyle(s);
+      var avail = s.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
+      var h = inn.offsetHeight;
+      if (h > avail) {
+        var k = Math.max(0.55, avail / h);
+        inn.style.transformOrigin = '50% 0';
+        inn.style.transform = 'translateY(' + Math.max(0, (avail - h * k) / 2).toFixed(1) + 'px) scale(' + k.toFixed(3) + ')';
+      }
+    });
+  }
+  window.addEventListener('resize', fit);
+  window.addEventListener('load', fit);
+
+  /* ---------- 開始 ---------- */
+  var startIdx = slides.findIndex(function (s) { return '#' + s.id === location.hash; });
+  go(startIdx < 0 ? 0 : startIdx, true);
+  visual = cur;
+  fit();
+  resize();
+  if (reduced) drawStatic(); else start();
+})();
+</script>
+</body>
+</html>
