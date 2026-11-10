@@ -1,0 +1,181 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="800" height="600">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#6ec3f4"/>
+      <stop offset="1" stop-color="#d9f1ff"/>
+    </linearGradient>
+    <linearGradient id="grass" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#8fd16a"/>
+      <stop offset="1" stop-color="#5aa843"/>
+    </linearGradient>
+    <linearGradient id="pouch" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffb347"/>
+      <stop offset="1" stop-color="#f08a24"/>
+    </linearGradient>
+  </defs>
+
+  <!-- 空 -->
+  <rect x="0" y="0" width="800" height="600" fill="url(#sky)"/>
+
+  <!-- 太陽 -->
+  <circle cx="690" cy="90" r="60" fill="#fff3b0" opacity="0.6"/>
+  <circle cx="690" cy="90" r="42" fill="#ffd94a"/>
+
+  <!-- 雲 -->
+  <g fill="#ffffff" opacity="0.95">
+    <ellipse cx="130" cy="110" rx="60" ry="24"/>
+    <ellipse cx="170" cy="92" rx="42" ry="26"/>
+    <ellipse cx="95" cy="98" rx="32" ry="20"/>
+    <ellipse cx="560" cy="60" rx="50" ry="18"/>
+    <ellipse cx="530" cy="50" rx="30" ry="18"/>
+    <ellipse cx="250" cy="200" rx="40" ry="14" opacity="0.7"/>
+  </g>
+
+  <!-- 遠くの丘 -->
+  <path d="M0 470 C 150 400, 300 440, 420 455 C 560 420, 700 410, 800 450 L 800 600 L 0 600 Z" fill="#a9dc8a"/>
+
+  <!-- 地面 -->
+  <rect x="0" y="470" width="800" height="130" fill="url(#grass)"/>
+
+  <!-- 道 -->
+  <rect x="0" y="488" width="800" height="50" fill="#9a9a9a"/>
+  <rect x="0" y="488" width="800" height="4" fill="#7d7d7d"/>
+  <g fill="#f4f4f4">
+    <rect x="40" y="518" width="70" height="5"/>
+    <rect x="200" y="518" width="70" height="5"/>
+    <rect x="360" y="518" width="70" height="5"/>
+    <rect x="520" y="518" width="70" height="5"/>
+    <rect x="680" y="518" width="70" height="5"/>
+  </g>
+
+  <!-- 影 -->
+  <ellipse cx="400" cy="503" rx="240" ry="9" fill="#000000" opacity="0.22"/>
+
+  <!-- 奥側の脚・クランク・ペダル -->
+  <g stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <line x1="390" y1="420" x2="375" y2="388" stroke="#555" stroke-width="6"/>
+    <rect x="358" y="384" width="34" height="7" rx="2" fill="#333" stroke="none"/>
+    <path d="M350 265 L 394 325 L 376 380" stroke="#d9781a" stroke-width="10"/>
+    <path d="M374 372 L 396 383 L 362 384 Z" fill="#d9781a" stroke="#d9781a" stroke-width="3"/>
+  </g>
+
+  <!-- 車輪 -->
+  <g fill="none">
+    <!-- 後輪 -->
+    <circle cx="250" cy="420" r="80" stroke="#2b2b2b" stroke-width="10"/>
+    <circle cx="250" cy="420" r="72" stroke="#c8c8c8" stroke-width="3"/>
+    <g stroke="#b5b5b5" stroke-width="1.5">
+      <line x1="178" y1="420" x2="322" y2="420"/>
+      <line x1="250" y1="348" x2="250" y2="492"/>
+      <line x1="199" y1="369" x2="301" y2="471"/>
+      <line x1="199" y1="471" x2="301" y2="369"/>
+      <line x1="183" y1="392" x2="317" y2="448"/>
+      <line x1="183" y1="448" x2="317" y2="392"/>
+      <line x1="222" y1="353" x2="278" y2="487"/>
+      <line x1="222" y1="487" x2="278" y2="353"/>
+    </g>
+    <!-- 前輪 -->
+    <circle cx="550" cy="420" r="80" stroke="#2b2b2b" stroke-width="10"/>
+    <circle cx="550" cy="420" r="72" stroke="#c8c8c8" stroke-width="3"/>
+    <g stroke="#b5b5b5" stroke-width="1.5">
+      <line x1="478" y1="420" x2="622" y2="420"/>
+      <line x1="550" y1="348" x2="550" y2="492"/>
+      <line x1="499" y1="369" x2="601" y2="471"/>
+      <line x1="499" y1="471" x2="601" y2="369"/>
+      <line x1="483" y1="392" x2="617" y2="448"/>
+      <line x1="483" y1="448" x2="617" y2="392"/>
+      <line x1="522" y1="353" x2="578" y2="487"/>
+      <line x1="522" y1="487" x2="578" y2="353"/>
+    </g>
+  </g>
+
+  <!-- チェーン -->
+  <g fill="none" stroke="#444" stroke-width="2">
+    <line x1="250" y1="411" x2="390" y2="402"/>
+    <line x1="250" y1="429" x2="390" y2="438"/>
+  </g>
+
+  <!-- フレーム -->
+  <g fill="none" stroke="#e03a3a" stroke-width="9" stroke-linecap="round" stroke-linejoin="round">
+    <line x1="352" y1="295" x2="390" y2="420"/>
+    <line x1="357" y1="310" x2="507" y2="302"/>
+    <line x1="511" y1="314" x2="390" y2="420"/>
+    <line x1="390" y1="420" x2="250" y2="420"/>
+    <line x1="357" y1="310" x2="250" y2="420"/>
+    <line x1="505" y1="290" x2="512" y2="316"/>
+  </g>
+  <!-- フォーク -->
+  <path d="M512 316 Q 535 370 550 420" fill="none" stroke="#b8b8b8" stroke-width="7" stroke-linecap="round"/>
+
+  <!-- ハブ・チェーンリング -->
+  <circle cx="250" cy="420" r="9" fill="#666"/>
+  <circle cx="550" cy="420" r="8" fill="#666"/>
+  <circle cx="390" cy="420" r="18" fill="#888" stroke="#444" stroke-width="3"/>
+  <circle cx="390" cy="420" r="6" fill="#333"/>
+
+  <!-- ハンドル -->
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M505 290 L 500 260" stroke="#b8b8b8" stroke-width="7"/>
+    <path d="M500 260 Q 498 252 486 254 L 470 258" stroke="#b8b8b8" stroke-width="6"/>
+    <path d="M488 254 L 468 258" stroke="#222" stroke-width="10"/>
+  </g>
+
+  <!-- サドル -->
+  <path d="M308 284 Q 312 274 340 278 L 392 282 Q 400 286 392 292 L 330 296 Q 306 298 308 284 Z" fill="#3a2a20"/>
+
+  <!-- 尾羽 -->
+  <path d="M295 215 L 248 200 L 268 222 L 240 232 L 272 240 L 252 258 L 300 250 Z" fill="#f4f4f4" stroke="#bdbdbd" stroke-width="2" stroke-linejoin="round"/>
+
+  <!-- 首 -->
+  <path d="M395 205 C 440 185, 398 150, 432 110" fill="none" stroke="#bdbdbd" stroke-width="36" stroke-linecap="round"/>
+  <path d="M395 205 C 440 185, 398 150, 432 110" fill="none" stroke="#ffffff" stroke-width="32" stroke-linecap="round"/>
+
+  <!-- 体 -->
+  <ellipse cx="352" cy="225" rx="78" ry="58" transform="rotate(-12 352 225)" fill="#ffffff" stroke="#bdbdbd" stroke-width="2"/>
+  <path d="M300 258 Q 345 285 400 262" fill="none" stroke="#e3e3e3" stroke-width="3" stroke-linecap="round"/>
+
+  <!-- 頭の冠羽 -->
+  <path d="M415 95 L 388 82 L 408 100 L 386 104 L 412 112 Z" fill="#ffffff" stroke="#bdbdbd" stroke-width="2" stroke-linejoin="round"/>
+
+  <!-- のど袋 -->
+  <path d="M452 118 L 612 150 C 580 215, 480 222, 446 140 Z" fill="url(#pouch)" stroke="#c96a12" stroke-width="2" stroke-linejoin="round"/>
+  <path d="M470 140 C 500 185, 555 185, 590 158" fill="none" stroke="#d97a1c" stroke-width="2" opacity="0.7"/>
+  <path d="M462 128 C 495 165, 550 168, 598 152" fill="none" stroke="#d97a1c" stroke-width="1.5" opacity="0.5"/>
+
+  <!-- 上くちばし -->
+  <path d="M452 92 L 608 138 Q 622 144 616 158 Q 610 152 600 150 L 452 120 Z" fill="#ffd166" stroke="#c98a1a" stroke-width="2" stroke-linejoin="round"/>
+  <path d="M458 106 L 600 144" fill="none" stroke="#e0a030" stroke-width="2"/>
+
+  <!-- 頭 -->
+  <circle cx="436" cy="104" r="29" fill="#ffffff" stroke="#bdbdbd" stroke-width="2"/>
+  <!-- 目 -->
+  <circle cx="444" cy="96" r="9" fill="#ffe9a8"/>
+  <circle cx="445" cy="96" r="5" fill="#1a1a1a"/>
+  <circle cx="447" cy="94" r="1.6" fill="#ffffff"/>
+
+  <!-- 翼(ハンドルを握る) -->
+  <path d="M322 205 C 360 172, 430 215, 482 246 L 490 256 L 478 266 C 440 268, 370 280, 325 250 C 310 238, 310 218, 322 205 Z" fill="#f7f7f7" stroke="#bdbdbd" stroke-width="2" stroke-linejoin="round"/>
+  <path d="M340 240 C 380 258, 430 256, 470 258" fill="none" stroke="#d5d5d5" stroke-width="2" stroke-linecap="round"/>
+  <path d="M345 225 C 385 240, 425 242, 462 248" fill="none" stroke="#d5d5d5" stroke-width="2" stroke-linecap="round"/>
+  <!-- 翼先(手のようにグリップへ) -->
+  <path d="M452 240 L 486 247 L 492 256 L 484 266 L 450 266 Z" fill="#3b3b3b" stroke="#222" stroke-width="1.5" stroke-linejoin="round"/>
+  <path d="M462 246 L 462 264 M472 248 L 472 265" stroke="#666" stroke-width="1.5"/>
+
+  <!-- 手前の脚・クランク・ペダル -->
+  <g stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <line x1="390" y1="420" x2="405" y2="452" stroke="#333" stroke-width="6"/>
+    <rect x="386" y="450" width="40" height="8" rx="2" fill="#222" stroke="none"/>
+    <path d="M368 270 L 424 345 L 406 444" stroke="#f08a24" stroke-width="11"/>
+    <path d="M402 438 L 434 449 L 390 450 Z" fill="#f08a24" stroke="#f08a24" stroke-width="4"/>
+    <path d="M404 441 L 420 449 M403 442 L 406 450" stroke="#c96a12" stroke-width="1.5"/>
+  </g>
+  <!-- 脚の付け根の羽 -->
+  <ellipse cx="366" cy="268" rx="20" ry="13" fill="#ffffff" stroke="#d0d0d0" stroke-width="1.5"/>
+
+  <!-- 手前の草 -->
+  <g stroke="#3f8f30" stroke-width="3" stroke-linecap="round">
+    <path d="M60 570 L 54 552 M60 570 L 62 548 M60 570 L 70 554"/>
+    <path d="M700 575 L 694 557 M700 575 L 702 553 M700 575 L 710 559"/>
+    <path d="M330 580 L 324 562 M330 580 L 332 558 M330 580 L 340 564"/>
+  </g>
+</svg>

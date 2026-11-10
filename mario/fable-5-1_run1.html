@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<title>Side Scroller 1-1</title>
+<style>
+  html,body{margin:0;height:100%;background:#1a1a2a;display:flex;align-items:center;justify-content:center;}
+  canvas{max-width:100vw;max-height:100vh;image-rendering:pixelated;}
+</style>
+</head>
+<body>
+<canvas id="c" width="800" height="480"></canvas>
+<script>
+(() => {
+'use strict';
+const cv = document.getElementById('c'), ctx = cv.getContext('2d');
+const W = cv.width, H = cv.height, T = 32, LW = 212, LH = 15;
+const START_X = 3 * T, START_Y = 11 * T;
+
+// ---------- 入力 ----------
+const keys = {};
+let jumpBuffer = 0, startQueued = false;
+addEventListener('keydown', e => {
+  if (['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Space','Enter'].includes(e.code)) e.preventDefault();
+  if (!e.repeat) {
+    if (e.code === 'Space' || e.code === 'ArrowUp') jumpBuffer = 6;
+    if (e.code === 'Space' || e.code === 'Enter') startQueued = true;
+  }
+  keys[e.code] = true;
+});
+addEventListener('keyup', e => { keys[e.code] = false; });
+
+// ---------- 状態 ----------
+let state = 'title', score = 0, coins = 0, lives = 3, time = 400, timeTick = 0, frame = 0;
+let map, enemies, particles, popups, p, camX, flagY, winTimer, winPhase, deadTimer;
+
+// ---------- レベル生成 ----------
+// タイル: 0 空, 1 地面, 2 レンガ, 3 ?ブロック, 4 使用済み, 5/6 土管上部L/R, 7/8 土管本体L/R, 9 固ブロック, 10 旗ポール, 11 ポール先端
+const set = (x, y, v) => { if (x >= 0 && x < LW && y >= 0 && y < LH) map[y][x] = v; };
+const row = (y, x0, x1, v) => { for (let x = x0; x <= x1; x++) set(x, y, v); };
+const ground = (x0, x1) => { row(13, x0, x1, 1); row(14, x0, x1, 1); };
+const pipe = (x, h) => { for (let i = 0; i < h; i++) { const top = i === h - 1; set(x, 12 - i, top ? 5 : 7); set(x + 1, 12 - i, top ? 6 : 8); } };
+const stairs = (x, n, dir) => { for (let i = 0; i < n; i++) { const h = dir > 0 ? i + 1 : n - i; for (let j = 0; j < h; j++) set(x + i, 12 - j, 9); } };
+const ENEMY_SPAWNS = [22, 40, 51, 53, 80, 82, 97, 99, 114, 116, 124, 129, 174, 176];
+
+function buildLevel() {
+  map = Array.from({ length: LH }, () => new Array(LW).fill(0));
+  ground(0, 68); ground(71, 85); ground(89, 152); ground(155, LW - 1);
+  set(16, 9, 3);
+  set(20, 9, 2); set(21, 9, 3); set(22, 9, 2); set(23, 9, 3); set(24, 9, 2); set(22, 5, 3);
+  pipe(28, 2); pipe(38, 3); pipe(46, 4); pipe(57, 4);
+  row(9, 77, 79, 2); set(80, 9, 3); row(5, 80, 87, 2);
+  row(5, 91, 93, 2); set(94, 5, 3); set(94, 9, 2);
+  set(100, 9, 2); set(101, 9, 3); set(106, 9, 3); set(109, 9, 3); set(112, 9, 3); set(109, 5, 3);
+  set(118, 9, 2); row(5, 121, 123, 2);
+  row(9, 128, 131, 2); set(129, 5, 3); set(130, 5, 3);
+  stairs(134, 4, 1); stairs(140, 4, -1); stairs(148, 4, 1); stairs(155, 4, -1);
+  pipe(163, 2); row(9, 168, 171, 2); set(170, 9, 3);
+  pipe(179, 2);
+  stairs(181, 8, 1); for (let y = 5; y <= 12; y++) set(189, y, 9);
+  set(198, 12, 9); for (let y = 3; y <= 11; y++) set(198, y, 10); set(198, 2, 11);
+
+  enemies = ENEMY_SPAWNS.map(tx => ({ x: tx * T + 2, y: 12 * T + 4, w: 28, h: 28, dir: -1, vx: 0, vy: 0, state: 0, timer: 0, active: false, onGround: false, dead: false }));
+  particles = []; popups = [];
+  p = { x: START_X, y: START_Y, w: 22, h: 30, vx: 0, vy: 0, onGround: false, face: 1, walk: 0 };
+  camX = 0; time = 400; timeTick = 0; flagY = 2 * T + 16; winTimer = 0; winPhase = 0; deadTimer = 0; jumpBuffer = 0;
+}
+
+function newGame() { score = 0; coins = 0; lives = 3; buildLevel(); state = 'play'; }
+
+// ---------- 当たり判定 ----------
+function solidAt(tx, ty) {
+  if (tx < 0 || tx >= LW) return true;
+  if (ty < 0 || ty >= LH) return false;
+  const v = map[ty][tx];
+  return v !== 0 && v !== 10 && v !== 11;
+}
+function moveX(e) {
+  e.x += e.vx;
+  const x0 = Math.floor(e.x / T), x1 = Math.floor((e.x + e.w - 1) / T);
+  const y0 = Math.floor(e.y / T), y1 = Math.floor((e.y + e.h - 1) / T);
+  for (let ty = y0; ty <= y1; ty++) {
+    if (e.vx > 0 && solidAt(x1, ty)) { e.x = x1 * T - e.w; e.vx = 0; return true; }
+    if (e.vx < 0 && solidAt(x0, ty)) { e.x = (x0 + 1) * T; e.vx = 0; return true; }
+  }
+  return false;
+}
+function moveY(e, onHead) {
+  e.y += e.vy; e.onGround = false;
+  const x0 = Math.floor(e.x / T), x1 = Math.floor((e.x + e.w - 1) / T);
+  const y0 = Math.floor(e.y / T), y1 = Math.floor((e.y + e.h - 1) / T);
+  if (e.vy > 0) {
+    for (let tx = x0; tx <= x1; tx++) if (solidAt(tx, y1)) { e.y = y1 * T - e.h; e.vy = 0; e.onGround = true; break; }
+  } else if (e.vy < 0) {
+    let best = -1, bd = 1e9; const cx = e.x + e.w / 2;
+    for (let tx = x0; tx <= x1; tx++) if (solidAt(tx, y0)) { const d = Math.abs(tx * T + T / 2 - cx); if (d < bd) { bd = d; best = tx; } }
+    if (best >= 0) { e.y = (y0 + 1) * T; e.vy = 0; if (onHead) onHead(best, y0); }
+  }
+}
+const overlap = (a, b) => a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
+
+function addPopup(x, y, text) { popups.push({ x, y, text, life: 40 }); }
+
+function hitBlock(tx, ty) {
+  const v = map[ty][tx];
+  if (v === 3) {
+    map[ty][tx] = 4; coins++; score += 200;
+    particles.push({ type: 'coin', x: tx * T + T / 2, y: ty * T, vy: -7, life: 32 });
+    addPopup(tx * T, ty * T - 8, '200');
+  } else if (v === 2) {
+    map[ty][tx] = 0; score += 50;
+    for (let i = 0; i < 4; i++) particles.push({ type: 'shard', x: tx * T + 8 + (i % 2) * 12, y: ty * T + 8 + Math.floor(i / 2) * 12, vx: (i % 2 ? 2 : -2), vy: (i < 2 ? -8 : -5), life: 60 });
+  } else return;
+  // ブロックの上に乗っている敵を吹き飛ばす
+  for (const e of enemies) {
+    if (e.state !== 0) continue;
+    if (Math.abs(e.y + e.h - ty * T) <= 4 && e.x < tx * T + T && e.x + e.w > tx * T) { e.state = 2; e.vy = -7; e.vx = e.dir; score += 100; addPopup(e.x, e.y - 10, '100'); }
+  }
+}
+
+function die(fall) {
+  if (state !== 'play') return;
+  state = 'dead'; deadTimer = fall ? 70 : 0; p.vx = 0; p.vy = -8;
+}
+
+function startWin(tx, ty) {
+  state = 'win'; winPhase = 0; winTimer = 0;
+  const bonus = Math.max(1, 12 - ty) * 100;
+  score += bonus; addPopup(tx * T + 20, ty * T, String(bonus));
+  p.x = tx * T + 14; p.vx = 0; p.vy = 0; p.face = -1;
+}
+
+// ---------- 更新 ----------
+function update() {
+  frame++;
+  if (state === 'title' || state === 'over' || state === 'clear') {
+    if (startQueued) { startQueued = false; newGame(); }
+    return;
+  }
+  startQueued = false;
+
+  if (state === 'dead') {
+    deadTimer++;
+    if (deadTimer > 15) { p.vy += 0.45; p.y += p.vy; }
+    if (deadTimer > 120) { lives--; if (lives <= 0) state = 'over'; else { buildLevel(); state = 'play'; } }
+    updateParticles();
+    return;
+  }
+
+  if (state === 'win') {
+    if (winPhase === 0) {
+      p.vy = 3; moveY(p); flagY = Math.min(flagY + 3, 11 * T);
+      if (p.onGround) { winPhase = 1; p.face = 1; }
+    } else if (winPhase === 1) {
+      p.vx = 2; p.vy += 0.6; moveX(p); moveY(p); p.walk += 0.5; winTimer++;
+      if (winTimer > 110) { winPhase = 2; p.vx = 0; }
+    } else {
+      winTimer++; if (winTimer > 180) state = 'clear';
+    }
+    updateParticles();
+    return;
+  }
+
+  // ---- play ----
+  if (++timeTick >= 24) { timeTick = 0; if (--time <= 0) { time = 0; die(false); return; } }
+
+  const left = keys.ArrowLeft, right = keys.ArrowRight, hold = keys.Space || keys.ArrowUp;
+  const acc = p.onGround ? 0.3 : 0.2, maxV = 3.4;
+  if (left && !right) { p.vx -= acc; p.face = -1; }
+  else if (right && !left) { p.vx += acc; p.face = 1; }
+  else if (p.onGround) { p.vx *= 0.8; if (Math.abs(p.vx) < 0.1) p.vx = 0; }
+  p.vx = Math.max(-maxV, Math.min(maxV, p.vx));
+  if (jumpBuffer > 0 && p.onGround) { p.vy = -8.6; p.onGround = false; jumpBuffer = 0; }
+  if (jumpBuffer > 0) jumpBuffer--;
+  p.vy += (hold && p.vy < 0) ? 0.28 : 0.62;
+  if (p.vy > 11) p.vy = 11;
+  moveX(p);
+  moveY(p, hitBlock);
+  if (p.onGround && p.vx !== 0) p.walk += Math.abs(p.vx) * 0.25;
+
+  if (p.y > LH * T + 60) { die(true); return; }
+
+  // 旗
+  {
+    const x0 = Math.floor(p.x / T), x1 = Math.floor((p.x + p.w - 1) / T);
+    const y0 = Math.max(0, Math.floor(p.y / T)), y1 = Math.min(LH - 1, Math.floor((p.y + p.h - 1) / T));
+    for (let ty = y0; ty <= y1; ty++) for (let tx = x0; tx <= x1; tx++) {
+      if (tx >= 0 && tx < LW && (map[ty][tx] === 10 || map[ty][tx] === 11)) { startWin(tx, ty); return; }
+    }
+  }
+
+  // 敵
+  for (const e of enemies) {
+    if (!e.active) { if (e.x < camX + W + 48) e.active = true; else continue; }
+    if (e.state === 1) { if (++e.timer > 30) e.dead = true; continue; }
+    if (e.state === 2) { e.vy += 0.5; e.y += e.vy; e.x += e.vx; if (e.y > LH * T + 100) e.dead = true; continue; }
+    e.vy += 0.5; if (e.vy > 8) e.vy = 8;
+    e.vx = e.dir; if (moveX(e)) e.dir = -e.dir;
+    moveY(e);
+    if (e.y > LH * T + 100) e.dead = true;
+  }
+  for (let i = 0; i < enemies.length; i++) for (let j = i + 1; j < enemies.length; j++) {
+    const a = enemies[i], b = enemies[j];
+    if (a.state === 0 && b.state === 0 && a.active && b.active && overlap(a, b)) {
+      a.dir = -a.dir; b.dir = -b.dir;
+      if (a.x < b.x) { a.x -= 2; b.x += 2; } else { a.x += 2; b.x -= 2; }
+    }
+  }
+  enemies = enemies.filter(e => !e.dead);
+
+  for (const e of enemies) {
+    if (e.state !== 0 || !e.active || !overlap(p, e)) continue;
+    if (p.vy > 0 && (p.y + p.h - e.y) < e.h * 0.6 + p.vy) {
+      e.state = 1; e.timer = 0; score += 100; addPopup(e.x, e.y - 10, '100');
+      p.y = e.y - p.h; p.vy = hold ? -8 : -5;
+    } else { die(false); return; }
+  }
+
+  updateParticles();
+  const target = p.x - W * 0.4;
+  camX = Math.max(0, Math.min(LW * T - W, target));
+}
+
+function updateParticles() {
+  for (const q of particles) {
+    q.life--;
+    if (q.type === 'coin') { q.vy += 0.4; q.y += q.vy; }
+    else { q.vy += 0.4; q.x += q.vx; q.y += q.vy; }
+  }
+  particles = particles.filter(q => q.life > 0);
+  for (const q of popups) { q.life--; q.y -= 1; }
+  popups = popups.filter(q => q.life > 0);
+}
+
+// ---------- 描画 ----------
+function topArc(x, y, r) { ctx.beginPath(); ctx.arc(x, y, r, Math.PI, 0); ctx.closePath(); ctx.fill(); ctx.stroke(); }
+
+function drawBackground() {
+  ctx.fillStyle = '#5c94fc'; ctx.fillRect(0, 0, W, H);
+  // 雲(視差)
+  ctx.fillStyle = '#ffffff';
+  for (let i = 0; i < 44; i++) {
+    const cx = i * 190 + (i % 3) * 57 - camX * 0.5, cy = 48 + (i % 4) * 30, s = 1 + (i % 2) * 0.5;
+    if (cx < -120 || cx > W + 60) continue;
+    ctx.beginPath();
+    ctx.arc(cx, cy, 14 * s, 0, 7); ctx.arc(cx + 16 * s, cy - 8 * s, 17 * s, 0, 7); ctx.arc(cx + 34 * s, cy, 14 * s, 0, 7);
+    ctx.fill();
+    ctx.fillRect(cx - 14 * s, cy, 62 * s, 12 * s);
+  }
+  // 丘と草
+  ctx.lineWidth = 2; ctx.strokeStyle = '#005800';
+  for (let k = 0; k < 5; k++) {
+    const bx = k * 48 * T - camX;
+    if (bx > W || bx + 1536 < 0) continue;
+    ctx.fillStyle = '#00a800';
+    topArc(bx + 100, 13 * T, 90);
+    topArc(bx + 330, 13 * T, 50);
+    ctx.fillStyle = '#30c030';
+    for (let b = 0; b < 3; b++) topArc(bx + 700 + b * 22, 13 * T, 16);
+    for (let b = 0; b < 2; b++) topArc(bx + 1200 + b * 22, 13 * T, 14);
+  }
+  // 城
+  const cx = 203 * T - camX;
+  if (cx < W && cx + 6 * T > 0) {
+    ctx.fillStyle = '#c84c0c';
+    ctx.fillRect(cx, 10 * T, 5 * T, 3 * T);
+    ctx.fillRect(cx + T, 8 * T, 3 * T, 2 * T);
+    for (let i = 0; i < 5; i++) ctx.fillRect(cx + i * T + 6, 10 * T - 10, 20, 10);
+    for (let i = 0; i < 3; i++) ctx.fillRect(cx + T + i * T + 6, 8 * T - 10, 20, 10);
+    ctx.fillStyle = '#000';
+    ctx.fillRect(cx + 2 * T + 6, 11 * T, 20, 2 * T);
+    ctx.fillRect(cx + T + 10, 10 * T + 6, 12, 12); ctx.fillRect(cx + 3 * T + 10, 10 * T + 6, 12, 12);
+  }
+}
+
+function drawTile(v, sx, sy) {
+  switch (v) {
+    case 1:
+      ctx.fillStyle = '#7a2a00'; ctx.fillRect(sx, sy, T, T);
+      ctx.fillStyle = '#c84c0c';
+      ctx.fillRect(sx + 2, sy + 2, 13, 13); ctx.fillRect(sx + 17, sy + 2, 13, 13);
+      ctx.fillRect(sx + 2, sy + 17, 13, 13); ctx.fillRect(sx + 17, sy + 17, 13, 13);
+      break;
+    case 2:
+      ctx.fillStyle = '#c84c0c'; ctx.fillRect(sx, sy, T, T);
+      ctx.fillStyle = '#3a1000';
+      ctx.fillRect(sx, sy + 15, T, 2); ctx.fillRect(sx + 15, sy, 2, 15);
+      ctx.fillRect(sx + 6, sy + 17, 2, 15); ctx.fillRect(sx + 24, sy + 17, 2, 15);
+      ctx.fillRect(sx, sy, T, 1); ctx.fillRect(sx, sy + T - 1, T, 1);
+      break;
+    case 3: {
+      const pulse = 0.85 + 0.15 * Math.sin(frame * 0.15);
+      ctx.fillStyle = `rgb(${Math.round(248 * pulse)},${Math.round(184 * pulse)},0)`;
+      ctx.fillRect(sx, sy, T, T);
+      ctx.strokeStyle = '#8a5000'; ctx.lineWidth = 3; ctx.strokeRect(sx + 1.5, sy + 1.5, T - 3, T - 3);
+      ctx.fillStyle = '#8a5000'; ctx.font = 'bold 22px monospace'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText('?', sx + T / 2, sy + T / 2 + 1);
+      break;
+    }
+    case 4:
+      ctx.fillStyle = '#8a5000'; ctx.fillRect(sx, sy, T, T);
+      ctx.strokeStyle = '#3a1000'; ctx.lineWidth = 3; ctx.strokeRect(sx + 1.5, sy + 1.5, T - 3, T - 3);
+      break;
+    case 5: case 6: case 7: case 8: {
+      const isTop = v === 5 || v === 6, isLeft = v === 5 || v === 7;
+      let x = sx, w = T;
+      if (isTop) { if (isLeft) x -= 4; w += 4; }
+      ctx.fillStyle = '#00a800'; ctx.fillRect(x, sy, w, T);
+      ctx.fillStyle = '#80e080'; ctx.fillRect(x + (isLeft ? 4 : 6), sy, 6, T);
+      ctx.fillStyle = '#006000'; ctx.fillRect(x + w - (isLeft ? 6 : 10), sy, 6, T);
+      ctx.fillStyle = '#003800';
+      if (isLeft) ctx.fillRect(x, sy, 2, T); else ctx.fillRect(x + w - 2, sy, 2, T);
+      if (isTop) { ctx.fillRect(x, sy, w, 2); ctx.fillRect(x, sy + T - 2, w, 2); }
+      break;
+    }
+    case 9:
+      ctx.fillStyle = '#b8b8b8'; ctx.fillRect(sx, sy, T, T);
+      ctx.fillStyle = '#e8e8e8'; ctx.fillRect(sx + 3, sy + 3, T - 6, T - 6);
+      ctx.fillStyle = '#505050'; ctx.fillRect(sx, sy, T, 2); ctx.fillRect(sx, sy, 2, T); ctx.fillRect(sx + T - 2, sy, 2, T); ctx.fillRect(sx, sy + T - 2, T, 2);
+      ctx.fillStyle = '#8a8a8a'; ctx.fillRect(sx + 8, sy + 8, T - 16, T - 16);
+      break;
+    case 10:
+      ctx.fillStyle = '#30c030'; ctx.fillRect(sx + T / 2 - 2, sy, 4, T);
+      break;
+    case 11:
+      ctx.fillStyle = '#30c030'; ctx.fillRect(sx + T / 2 - 2, sy + 8, 4, T - 8);
+      ctx.beginPath(); ctx.arc(sx + T / 2, sy + 8, 8, 0, 7); ctx.fill();
+      break;
+  }
+}
+
+function drawPlayer(x, y, face, walk, moving) {
+  const legOff = moving ? Math.round(Math.sin(walk) * 3) : 0;
+  ctx.fillStyle = '#e03030'; ctx.fillRect(x - 2, y, 26, 8);                       // 帽子
+  ctx.fillStyle = '#f8c890'; ctx.fillRect(x + 2, y + 8, 18, 8);                   // 顔
+  ctx.fillStyle = '#000'; ctx.fillRect(x + (face > 0 ? 14 : 5), y + 10, 3, 3);    // 目
+  ctx.fillStyle = '#e03030'; ctx.fillRect(x, y + 16, 22, 6);                      // 上着
+  ctx.fillStyle = '#3050e0'; ctx.fillRect(x + 2, y + 20, 18, 7);                  // ズボン
+  ctx.fillStyle = '#602010';
+  ctx.fillRect(x - 1 + legOff, y + 26, 10, 4); ctx.fillRect(x + 13 - legOff, y + 26, 10, 4); // 靴
+}
+
+function drawEnemy(e) {
+  const x = e.x - camX, y = e.y;
+  if (e.state === 1) {
+    ctx.fillStyle = '#a04000'; ctx.fillRect(x, y + 16, e.w, 12);
+    ctx.fillStyle = '#fff'; ctx.fillRect(x + 6, y + 19, 6, 4); ctx.fillRect(x + 16, y + 19, 6, 4);
+    return;
+  }
+  ctx.save();
+  if (e.state === 2) { ctx.translate(x + e.w / 2, y + e.h / 2); ctx.scale(1, -1); ctx.translate(-(x + e.w / 2), -(y + e.h / 2)); }
+  ctx.fillStyle = '#a04000';
+  ctx.beginPath(); ctx.arc(x + 14, y + 12, 13, 0, 7); ctx.fill();
+  ctx.fillRect(x + 2, y + 12, 24, 10);
+  ctx.fillStyle = '#301000';
+  const step = Math.sin(frame * 0.2) > 0 ? 2 : -2;
+  ctx.fillRect(x + 1 + step, y + 22, 11, 6); ctx.fillRect(x + 16 - step, y + 22, 11, 6);
+  ctx.fillStyle = '#fff'; ctx.fillRect(x + 6, y + 8, 6, 7); ctx.fillRect(x + 16, y + 8, 6, 7);
+  ctx.fillStyle = '#000'; ctx.fillRect(x + 9, y + 10, 3, 4); ctx.fillRect(x + 16, y + 10, 3, 4);
+  ctx.restore();
+}
+
+function drawHUD() {
+  const txt = `SCORE ${String(Math.min(score, 999999)).padStart(6, '0')}   COINS ${String(coins).padStart(2, '0')}   LIVES ${lives}   TIME ${time}`;
+  ctx.font = 'bold 18px monospace'; ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+  ctx.fillStyle = '#000'; ctx.fillText(txt, 18, 30);
+  ctx.fillStyle = '#fff'; ctx.fillText(txt, 16, 28);
+}
+
+function overlay(lines) {
+  ctx.fillStyle = 'rgba(0,0,0,0.55)'; ctx.fillRect(0, 0, W, H);
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = '#fff';
+  lines.forEach((l, i) => {
+    ctx.font = (i === 0 ? 'bold 40px' : 'bold 20px') + ' monospace, sans-serif';
+    ctx.fillText(l, W / 2, H / 2 - 50 + i * 44);
+  });
+}
+
+function draw() {
+  drawBackground();
+  const tx0 = Math.floor(camX / T), tx1 = Math.min(LW - 1, tx0 + Math.ceil(W / T) + 1);
+  for (let ty = 0; ty < LH; ty++) for (let tx = tx0; tx <= tx1; tx++) {
+    const v = map[ty][tx]; if (v) drawTile(v, tx * T - camX, ty * T);
+  }
+  // 旗
+  {
+    const px = 198 * T + T / 2 - camX;
+    if (px > -40 && px < W + 40) {
+      ctx.fillStyle = '#f0f0f0'; ctx.strokeStyle = '#006000'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(px - 2, flagY); ctx.lineTo(px - 2, flagY + 28); ctx.lineTo(px - 30, flagY + 14); ctx.closePath(); ctx.fill(); ctx.stroke();
+    }
+  }
+  for (const e of enemies) if (e.x - camX > -40 && e.x - camX < W + 40) drawEnemy(e);
+  for (const q of particles) {
+    if (q.type === 'coin') {
+      ctx.fillStyle = '#f8d800'; ctx.beginPath(); ctx.arc(q.x - camX, q.y, 7, 0, 7); ctx.fill();
+      ctx.strokeStyle = '#a07000'; ctx.lineWidth = 2; ctx.stroke();
+    } else { ctx.fillStyle = '#c84c0c'; ctx.fillRect(q.x - camX, q.y, 8, 8); }
+  }
+  const moving = state === 'play' ? (p.onGround && p.vx !== 0) : (state === 'win' && winPhase === 1);
+  drawPlayer(p.x - camX, p.y, p.face, p.walk, moving);
+  ctx.font = 'bold 14px monospace'; ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic'; ctx.fillStyle = '#fff';
+  for (const q of popups) ctx.fillText(q.text, q.x - camX, q.y);
+  drawHUD();
+
+  if (state === 'title') overlay(['SIDE SCROLLER 1-1', '← → : 移動   SPACE / ↑ : ジャンプ(長押しで高く)', '敵は上から踏んで倒そう  ゴールの旗を目指せ!', 'SPACE でスタート']);
+  else if (state === 'over') overlay(['GAME OVER', `SCORE ${String(score).padStart(6, '0')}`, 'SPACE でリスタート']);
+  else if (state === 'clear') overlay(['COURSE CLEAR!', `SCORE ${String(score).padStart(6, '0')}   COINS ${coins}`, 'SPACE でもう一度']);
+}
+
+// ---------- メインループ ----------
+let last = performance.now(), acc = 0;
+function loop(now) {
+  acc += Math.min(now - last, 100); last = now;
+  while (acc >= 1000 / 60) { update(); acc -= 1000 / 60; }
+  draw();
+  requestAnimationFrame(loop);
+}
+buildLevel();
+requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>

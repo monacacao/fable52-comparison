@@ -1,0 +1,146 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="800" height="600">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#5fb8f5"/>
+      <stop offset="1" stop-color="#d8f0ff"/>
+    </linearGradient>
+    <linearGradient id="grass" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#8bc34a"/>
+      <stop offset="1" stop-color="#558b2f"/>
+    </linearGradient>
+  </defs>
+
+  <!-- 背景: 空 -->
+  <rect x="0" y="0" width="800" height="600" fill="url(#sky)"/>
+  <circle cx="680" cy="90" r="46" fill="#ffd54f"/>
+  <g fill="#ffffff" opacity="0.9">
+    <ellipse cx="140" cy="110" rx="60" ry="24"/>
+    <ellipse cx="180" cy="95" rx="45" ry="28"/>
+    <ellipse cx="100" cy="100" rx="40" ry="22"/>
+    <ellipse cx="520" cy="60" rx="50" ry="20"/>
+    <ellipse cx="555" cy="48" rx="38" ry="24"/>
+  </g>
+
+  <!-- 背景: 地面 -->
+  <rect x="0" y="518" width="800" height="82" fill="url(#grass)"/>
+  <rect x="0" y="514" width="800" height="8" fill="#6a9b2e"/>
+  <g stroke="#3e6b1f" stroke-width="3" stroke-linecap="round">
+    <line x1="60" y1="560" x2="60" y2="545"/>
+    <line x1="72" y1="562" x2="78" y2="548"/>
+    <line x1="700" y1="565" x2="702" y2="548"/>
+    <line x1="714" y1="568" x2="722" y2="552"/>
+    <line x1="420" y1="575" x2="426" y2="560"/>
+  </g>
+
+  <!-- 後輪 -->
+  <g transform="translate(240 440)">
+    <circle r="80" fill="none" stroke="#222" stroke-width="10"/>
+    <circle r="70" fill="none" stroke="#999" stroke-width="3"/>
+    <g stroke="#aaa" stroke-width="2">
+      <line x1="-70" y1="0" x2="70" y2="0"/>
+      <line x1="-70" y1="0" x2="70" y2="0" transform="rotate(30)"/>
+      <line x1="-70" y1="0" x2="70" y2="0" transform="rotate(60)"/>
+      <line x1="-70" y1="0" x2="70" y2="0" transform="rotate(90)"/>
+      <line x1="-70" y1="0" x2="70" y2="0" transform="rotate(120)"/>
+      <line x1="-70" y1="0" x2="70" y2="0" transform="rotate(150)"/>
+    </g>
+    <circle r="8" fill="#333"/>
+  </g>
+
+  <!-- 前輪 -->
+  <g transform="translate(560 440)">
+    <circle r="80" fill="none" stroke="#222" stroke-width="10"/>
+    <circle r="70" fill="none" stroke="#999" stroke-width="3"/>
+    <g stroke="#aaa" stroke-width="2">
+      <line x1="-70" y1="0" x2="70" y2="0"/>
+      <line x1="-70" y1="0" x2="70" y2="0" transform="rotate(30)"/>
+      <line x1="-70" y1="0" x2="70" y2="0" transform="rotate(60)"/>
+      <line x1="-70" y1="0" x2="70" y2="0" transform="rotate(90)"/>
+      <line x1="-70" y1="0" x2="70" y2="0" transform="rotate(120)"/>
+      <line x1="-70" y1="0" x2="70" y2="0" transform="rotate(150)"/>
+    </g>
+    <circle r="8" fill="#333"/>
+  </g>
+
+  <!-- チェーン -->
+  <g stroke="#555" stroke-width="3" fill="none">
+    <line x1="360" y1="404" x2="240" y2="429"/>
+    <line x1="360" y1="456" x2="240" y2="451"/>
+  </g>
+  <circle cx="240" cy="440" r="11" fill="none" stroke="#444" stroke-width="4"/>
+
+  <!-- フレーム -->
+  <g stroke="#d32f2f" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <line x1="360" y1="430" x2="318" y2="295"/>
+    <line x1="360" y1="430" x2="528" y2="345"/>
+    <line x1="318" y1="295" x2="518" y2="300"/>
+    <line x1="518" y1="300" x2="528" y2="345"/>
+    <line x1="528" y1="345" x2="560" y2="440"/>
+    <line x1="240" y1="440" x2="360" y2="430"/>
+    <line x1="240" y1="440" x2="318" y2="295"/>
+  </g>
+
+  <!-- シートポスト・サドル -->
+  <line x1="318" y1="295" x2="312" y2="274" stroke="#444" stroke-width="7" stroke-linecap="round"/>
+  <path d="M278 274 Q312 262 346 274 Q312 284 278 274 Z" fill="#222"/>
+
+  <!-- ステム・ハンドル -->
+  <line x1="518" y1="300" x2="512" y2="268" stroke="#444" stroke-width="7" stroke-linecap="round"/>
+  <path d="M485 268 Q512 248 540 268" fill="none" stroke="#222" stroke-width="7" stroke-linecap="round"/>
+  <line x1="480" y1="272" x2="490" y2="264" stroke="#333" stroke-width="12" stroke-linecap="round"/>
+  <line x1="535" y1="264" x2="545" y2="272" stroke="#333" stroke-width="12" stroke-linecap="round"/>
+
+  <!-- クランク・ペダル -->
+  <circle cx="360" cy="430" r="26" fill="none" stroke="#333" stroke-width="5"/>
+  <circle cx="360" cy="430" r="6" fill="#333"/>
+  <g stroke="#333" stroke-width="7" stroke-linecap="round">
+    <line x1="360" y1="430" x2="392" y2="468"/>
+    <line x1="360" y1="430" x2="328" y2="392"/>
+  </g>
+  <rect x="378" y="464" width="30" height="8" rx="2" fill="#222"/>
+  <rect x="313" y="388" width="30" height="8" rx="2" fill="#222"/>
+
+  <!-- ペリカンの脚(後ろ側) -->
+  <path d="M318 268 L300 332 L328 388" fill="none" stroke="#f29b1d" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M312 390 L346 390 L338 402 L316 400 Z" fill="#f29b1d" stroke="#c77a0e" stroke-width="2"/>
+
+  <!-- ペリカンの脚(前側) -->
+  <path d="M336 268 L356 366 L392 464" fill="none" stroke="#f5a623" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M376 466 L412 466 L404 480 L380 478 Z" fill="#f5a623" stroke="#c77a0e" stroke-width="2"/>
+
+  <!-- 尾羽 -->
+  <path d="M268 230 L222 212 L246 240 L218 258 L252 258 L236 285 L272 262 Z" fill="#e9e9e3" stroke="#555" stroke-width="3" stroke-linejoin="round"/>
+
+  <!-- 胴体 -->
+  <ellipse cx="325" cy="225" rx="72" ry="52" fill="#f7f7f2" stroke="#555" stroke-width="3"/>
+
+  <!-- 首 -->
+  <path d="M368 198 C398 176 406 130 448 116" fill="none" stroke="#555" stroke-width="36" stroke-linecap="round"/>
+  <path d="M368 198 C398 176 406 130 448 116" fill="none" stroke="#f7f7f2" stroke-width="30" stroke-linecap="round"/>
+
+  <!-- 頭 -->
+  <circle cx="458" cy="110" r="28" fill="#f7f7f2" stroke="#555" stroke-width="3"/>
+  <path d="M440 86 Q452 74 470 84" fill="none" stroke="#555" stroke-width="3" stroke-linecap="round"/>
+
+  <!-- のど袋 -->
+  <path d="M478 118 L610 138 Q604 186 546 192 Q494 196 478 132 Z" fill="#f7a76b" stroke="#c7692a" stroke-width="3" stroke-linejoin="round"/>
+  <path d="M492 150 Q540 182 596 160" fill="none" stroke="#d9823f" stroke-width="2.5"/>
+
+  <!-- くちばし(上) -->
+  <path d="M474 96 Q560 98 618 130 Q622 136 612 138 L478 120 Z" fill="#f2a33a" stroke="#b86d10" stroke-width="3" stroke-linejoin="round"/>
+  <path d="M608 134 Q618 140 612 148" fill="none" stroke="#b86d10" stroke-width="3" stroke-linecap="round"/>
+  <line x1="490" y1="104" x2="596" y2="124" stroke="#d98a1e" stroke-width="2"/>
+
+  <!-- 目 -->
+  <circle cx="466" cy="102" r="6" fill="#222"/>
+  <circle cx="468" cy="100" r="2" fill="#fff"/>
+
+  <!-- 翼(ハンドルに向かって伸びる) -->
+  <path d="M352 192 C400 190 452 216 490 262 L500 270 L482 272 C456 246 414 234 364 240 Z" fill="#e8e8e2" stroke="#555" stroke-width="3" stroke-linejoin="round"/>
+  <g stroke="#9a9a94" stroke-width="2" fill="none">
+    <path d="M372 212 C410 212 440 228 466 252"/>
+    <path d="M386 232 C414 232 436 244 456 262"/>
+  </g>
+  <!-- 翼先(グリップをつかむ) -->
+  <path d="M478 258 Q490 266 486 276 Q476 270 478 258 Z" fill="#e8e8e2" stroke="#555" stroke-width="2.5"/>
+</svg>
