@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fable 5.1 と 5.2 の比較</title>
+<style>
+  :root {
+    --bg: #f6f7f9;
+    --card: #ffffff;
+    --text: #1f2328;
+    --muted: #59636e;
+    --line: #d9dee4;
+    --c51: #2f6fde;
+    --c51-bg: #e8f0fe;
+    --c52: #c9571e;
+    --c52-bg: #fdeee5;
+    --ok: #1a7f37;
+    --ok-bg: #e6f4ea;
+    --radius: 12px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0f1216;
+      --card: #181c22;
+      --text: #e6e9ee;
+      --muted: #9aa4b1;
+      --line: #2a313b;
+      --c51: #7aa6ff;
+      --c51-bg: #1a2640;
+      --c52: #ff9a62;
+      --c52-bg: #3a2416;
+      --ok: #5ed37a;
+      --ok-bg: #16301e;
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans JP", Meiryo, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.7;
+    -webkit-text-size-adjust: 100%;
+  }
+  a { color: var(--c51); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  .wrap { max-width: 960px; margin: 0 auto; padding: 24px 16px 64px; }
+
+  header { margin-bottom: 28px; }
+  h1 { font-size: 1.75rem; margin: 0 0 8px; line-height: 1.3; }
+  .lead { color: var(--muted); margin: 0; font-size: 1rem; }
+  .lead a { font-weight: 600; }
+
+  nav.toc {
+    display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px;
+  }
+  nav.toc a {
+    display: inline-block; padding: 6px 12px; border-radius: 999px;
+    background: var(--card); border: 1px solid var(--line); font-size: 0.9rem; color: var(--text);
+  }
+  nav.toc a:hover { border-color: var(--c51); text-decoration: none; }
+
+  section.card {
+    background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
+    padding: 20px; margin-bottom: 20px;
+  }
+  .card h2 {
+    font-size: 1.25rem; margin: 0 0 12px; display: flex; align-items: center; gap: 10px; line-height: 1.3;
+  }
+  .num {
+    flex: none; width: 28px; height: 28px; border-radius: 50%; background: var(--text); color: var(--card);
+    font-size: 0.9rem; font-weight: 700; display: inline-flex; align-items: center; justify-content: center;
+  }
+  .note { color: var(--muted); margin: 0 0 14px; font-size: 0.95rem; }
+
+  .tag {
+    display: inline-block; font-size: 0.78rem; font-weight: 700; padding: 1px 8px; border-radius: 6px; vertical-align: middle;
+  }
+  .tag.v51 { background: var(--c51-bg); color: var(--c51); }
+  .tag.v52 { background: var(--c52-bg); color: var(--c52); }
+  .tag.ok { background: var(--ok-bg); color: var(--ok); }
+
+  /* 比較の2列 */
+  .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  @media (max-width: 560px) { .cols { grid-template-columns: 1fr; } }
+  .col {
+    border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px;
+    border-top-width: 4px;
+  }
+  .col.v51 { border-top-color: var(--c51); }
+  .col.v52 { border-top-color: var(--c52); }
+  .col h3 { margin: 0 0 8px; font-size: 1rem; }
+  .col.v51 h3 { color: var(--c51); }
+  .col.v52 h3 { color: var(--c52); }
+  .links { list-style: none; margin: 0; padding: 0; }
+  .links li { margin: 0; }
+  .links a {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 12px; margin-bottom: 6px; border-radius: 8px;
+    background: var(--bg); color: var(--text); font-weight: 600;
+  }
+  .links a:hover { background: var(--line); text-decoration: none; }
+  .links a .arrow { color: var(--muted); font-weight: 400; }
+
+  .kbd {
+    display: inline-block; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 0.85em; padding: 0 6px; border: 1px solid var(--line); border-bottom-width: 2px;
+    border-radius: 5px; background: var(--bg);
+  }
+
+  /* 画像グリッド */
+  .imgs { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  @media (max-width: 560px) { .imgs { grid-template-columns: 1fr; } }
+  .imgs figure {
+    margin: 0; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: var(--bg);
+    border-top-width: 4px;
+  }
+  .imgs figure.v51 { border-top-color: var(--c51); }
+  .imgs figure.v52 { border-top-color: var(--c52); }
+  .imgs img { display: block; width: 100%; height: auto; background: #fff; }
+  .imgs figcaption {
+    display: flex; justify-content: space-between; align-items: center; gap: 8px;
+    padding: 8px 12px; font-size: 0.9rem; font-weight: 600;
+  }
+  .imgs figcaption a { font-weight: 400; font-size: 0.85rem; white-space: nowrap; }
+  .imgs figcaption a::before { content: "SVG "; }
+  .imgs figcaption a::after { content: " \2197"; }
+  .grid-head { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 6px; }
+  .grid-head span { font-weight: 700; font-size: 0.95rem; padding: 0 2px; }
+  .grid-head .v51 { color: var(--c51); }
+  .grid-head .v52 { color: var(--c52); }
+  @media (max-width: 560px) { .grid-head { display: none; } }
+
+  /* バグ修正 */
+  .stats { display: flex; flex-wrap: wrap; gap: 10px; margin: 0 0 14px; }
+  .stat {
+    flex: 1 1 120px; background: var(--bg); border: 1px solid var(--line); border-radius: 10px;
+    padding: 10px 12px; text-align: center;
+  }
+  .stat b { display: block; font-size: 1.4rem; line-height: 1.2; }
+  .stat span { font-size: 0.82rem; color: var(--muted); }
+  .btn {
+    display: inline-block; padding: 10px 16px; border-radius: 8px; font-weight: 600;
+    background: var(--text); color: var(--card); margin-right: 8px; margin-bottom: 8px;
+  }
+  .btn:hover { opacity: 0.85; text-decoration: none; }
+  .btn.sub { background: var(--bg); color: var(--text); border: 1px solid var(--line); }
+  .url { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 0.85rem; word-break: break-all; color: var(--muted); }
+
+  footer { color: var(--muted); font-size: 0.85rem; text-align: center; margin-top: 32px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <h1>Fable 5.1 と 5.2 の比較</h1>
+    <p class="lead">同じ指示文を、Fable 5.1 と Fable 5.2 に2回ずつ渡して、出来を比べた記録です。数字の一覧は <a href="results.html">results.html</a> にあります。</p>
+    <nav class="toc" aria-label="目次">
+      <a href="#mario">1. マリオ風ゲーム</a>
+      <a href="#pelican">2. ペリカン(SVG)</a>
+      <a href="#bugfix">3. バグ修正</a>
+      <a href="results.html">4. 結果の数字</a>
+    </nav>
+  </header>
+
+  <!-- 1. マリオ -->
+  <section class="card" id="mario">
+    <h2><span class="num">1</span>マリオ1-1風のゲーム</h2>
+    <p class="note">操作: 矢印キーで移動、<span class="kbd">Space</span> か <span class="kbd">Z</span> でジャンプ(キーボードが必要です)</p>
+    <div class="cols">
+      <div class="col v51">
+        <h3>Fable 5.1</h3>
+        <ul class="links">
+          <li><a href="mario/fable-5-1_run1.html">1回目 <span class="arrow">遊ぶ →</span></a></li>
+          <li><a href="mario/fable-5-1_run2.html">2回目 <span class="arrow">遊ぶ →</span></a></li>
+        </ul>
+      </div>
+      <div class="col v52">
+        <h3>Fable 5.2</h3>
+        <ul class="links">
+          <li><a href="mario/fable-5-2_run1.html">1回目 <span class="arrow">遊ぶ →</span></a></li>
+          <li><a href="mario/fable-5-2_run2.html">2回目 <span class="arrow">遊ぶ →</span></a></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2. ペリカン -->
+  <section class="card" id="pelican">
+    <h2><span class="num">2</span>自転車に乗るペリカン(SVGの絵)</h2>
+    <p class="note">左が 5.1、右が 5.2。上が1回目、下が2回目です。各画像の右下から元のSVGファイルを開けます。</p>
+    <div class="grid-head"><span class="v51">Fable 5.1</span><span class="v52">Fable 5.2</span></div>
+    <div class="imgs">
+      <figure class="v51">
+        <img src="images/svg_fable-5-1_run1.png" alt="Fable 5.1 1回目: 自転車に乗るペリカン" loading="lazy">
+        <figcaption><span><span class="tag v51">5.1</span> 1回目</span><a href="svg/fable-5-1_run1.svg">元ファイル</a></figcaption>
+      </figure>
+      <figure class="v52">
+        <img src="images/svg_fable-5-2_run1.png" alt="Fable 5.2 1回目: 自転車に乗るペリカン" loading="lazy">
+        <figcaption><span><span class="tag v52">5.2</span> 1回目</span><a href="svg/fable-5-2_run1.svg">元ファイル</a></figcaption>
+      </figure>
+      <figure class="v51">
+        <img src="images/svg_fable-5-1_run2.png" alt="Fable 5.1 2回目: 自転車に乗るペリカン" loading="lazy">
+        <figcaption><span><span class="tag v51">5.1</span> 2回目</span><a href="svg/fable-5-1_run2.svg">元ファイル</a></figcaption>
+      </figure>
+      <figure class="v52">
+        <img src="images/svg_fable-5-2_run2.png" alt="Fable 5.2 2回目: 自転車に乗るペリカン" loading="lazy">
+        <figcaption><span><span class="tag v52">5.2</span> 2回目</span><a href="svg/fable-5-2_run2.svg">元ファイル</a></figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <!-- 3. バグ修正 -->
+  <section class="card" id="bugfix">
+    <h2><span class="num">3</span>バグ修正 <span class="tag ok">4本とも全テスト通過</span></h2>
+    <p class="note">約185行のコードにバグ14個、テスト31本。4本とも、全部直してテストが全部通った。</p>
+    <div class="stats">
+      <div class="stat"><b>約185</b><span>行のコード</span></div>
+      <div class="stat"><b>14</b><span>個のバグ</span></div>
+      <div class="stat"><b>31</b><span>本のテスト</span></div>
+      <div class="stat"><b>4 / 4</b><span>全部通過</span></div>
+    </div>
+    <a class="btn" href="https://github.com/monacacao/fable52-comparison/tree/main/bugfix" target="_blank" rel="noopener">GitHub で見る(bugfix)</a>
+    <a class="btn sub" href="https://github.com/monacacao/fable52-comparison/tree/main/bugfix-small" target="_blank" rel="noopener">小さい課題(bugfix-small)</a>
+    <p class="url">https://github.com/monacacao/fable52-comparison/tree/main/bugfix</p>
+  </section>
+
+  <!-- 4. 結果 -->
+  <section class="card" id="results">
+    <h2><span class="num">4</span>結果の数字</h2>
+    <p class="note">各課題の評価をまとめた一覧です。</p>
+    <a class="btn" href="results.html">results.html を開く</a>
+  </section>
+
+  <footer>Fable 5.1 / Fable 5.2 比較記録</footer>
+</div>
+</body>
+</html>

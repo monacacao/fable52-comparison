@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fable 5.1 と 5.2 の比較</title>
+<style>
+  :root {
+    --bg: #f5f4ef;
+    --card: #ffffff;
+    --text: #1f2126;
+    --muted: #5f6470;
+    --line: #e2e0d8;
+    --link: #1a5fb4;
+    --c51: #2b6cb0;
+    --c51-bg: #e8f1fb;
+    --c52: #b9500f;
+    --c52-bg: #fdeee2;
+    --ok: #1c7c45;
+    --ok-bg: #e5f5ec;
+    --img-bg: #ffffff;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #14161a;
+      --card: #1d2026;
+      --text: #e9eaee;
+      --muted: #a0a5b1;
+      --line: #30343d;
+      --link: #7fb4f5;
+      --c51: #7fb4f5;
+      --c51-bg: #1c2b3d;
+      --c52: #f2a468;
+      --c52-bg: #3a2616;
+      --ok: #6fd39a;
+      --ok-bg: #173224;
+      --img-bg: #ffffff;
+    }
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Yu Gothic UI", "Noto Sans JP", Meiryo, sans-serif;
+    font-size: 16px;
+    line-height: 1.75;
+  }
+  a { color: var(--link); }
+  a:focus-visible { outline: 3px solid var(--link); outline-offset: 2px; border-radius: 4px; }
+
+  .wrap { max-width: 920px; margin: 0 auto; padding: 0 16px 56px; }
+
+  header { padding: 40px 0 8px; }
+  h1 { font-size: clamp(1.6rem, 5.5vw, 2.3rem); line-height: 1.3; margin: 0 0 12px; letter-spacing: 0.01em; }
+  h1 .v51 { color: var(--c51); }
+  h1 .v52 { color: var(--c52); }
+  .lead { margin: 0; color: var(--muted); max-width: 44em; }
+
+  nav { margin: 24px 0 8px; }
+  nav ol {
+    list-style: none; margin: 0; padding: 0;
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;
+  }
+  nav a {
+    display: block; height: 100%;
+    padding: 10px 12px;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    text-decoration: none;
+    color: var(--text);
+    font-size: 0.9rem;
+    line-height: 1.4;
+  }
+  nav a:hover { border-color: var(--link); }
+  nav .num { display: block; font-size: 0.75rem; color: var(--muted); }
+
+  section {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 24px;
+    margin-top: 20px;
+    scroll-margin-top: 12px;
+  }
+  h2 { font-size: 1.3rem; line-height: 1.4; margin: 0 0 16px; display: flex; align-items: baseline; gap: 10px; }
+  h2 .num {
+    flex: none;
+    font-size: 0.85rem; font-weight: 700;
+    width: 1.9em; height: 1.9em; line-height: 1.9em; text-align: center;
+    border-radius: 50%;
+    background: var(--text); color: var(--card);
+    transform: translateY(-2px);
+  }
+  h2 small { font-size: 0.85rem; font-weight: normal; color: var(--muted); }
+  p { margin: 0 0 12px; }
+  p:last-child { margin-bottom: 0; }
+
+  .badge {
+    display: inline-block;
+    font-size: 0.85rem; font-weight: 700;
+    padding: 2px 12px;
+    border-radius: 999px;
+  }
+  .m51 .badge, .badge.m51 { color: var(--c51); background: var(--c51-bg); }
+  .m52 .badge, .badge.m52 { color: var(--c52); background: var(--c52-bg); }
+
+  /* マリオ */
+  .pair { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .model {
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 14px;
+  }
+  .model.m51 { border-top: 4px solid var(--c51); }
+  .model.m52 { border-top: 4px solid var(--c52); }
+  .runs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
+  .btn {
+    display: block;
+    text-align: center;
+    padding: 12px 8px;
+    border-radius: 10px;
+    text-decoration: none;
+    font-weight: 700;
+    color: #fff;
+  }
+  .m51 .btn { background: #2b6cb0; }
+  .m52 .btn { background: #b9500f; }
+  .btn:hover { filter: brightness(1.12); }
+  .keys {
+    margin-top: 16px;
+    padding: 12px 14px;
+    background: var(--bg);
+    border-radius: 10px;
+    font-size: 0.93rem;
+  }
+  kbd {
+    display: inline-block;
+    font-family: inherit; font-size: 0.85em;
+    padding: 0 7px;
+    border: 1px solid var(--line);
+    border-bottom-width: 2px;
+    border-radius: 6px;
+    background: var(--card);
+    white-space: nowrap;
+  }
+
+  /* ペリカン */
+  .compare { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 14px; }
+  .compare .head { text-align: center; }
+  figure { margin: 0; }
+  figure a.img {
+    display: block;
+    background: var(--img-bg);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  figure.m51 a.img { border-bottom: 4px solid var(--c51); }
+  figure.m52 a.img { border-bottom: 4px solid var(--c52); }
+  figure img { display: block; width: 100%; height: auto; }
+  figcaption {
+    font-size: 0.88rem;
+    padding: 6px 2px 0;
+    display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0 10px;
+  }
+  figcaption .run { font-weight: 700; }
+  .hint { font-size: 0.85rem; color: var(--muted); margin-top: 14px; }
+
+  /* バグ修正 */
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 14px; }
+  .stat {
+    background: var(--bg);
+    border-radius: 10px;
+    padding: 12px 8px;
+    text-align: center;
+    line-height: 1.3;
+  }
+  .stat b { display: block; font-size: clamp(1.3rem, 5vw, 1.8rem); }
+  .stat span { font-size: 0.85rem; color: var(--muted); }
+  .result {
+    background: var(--ok-bg);
+    color: var(--ok);
+    font-weight: 700;
+    border-radius: 10px;
+    padding: 12px 14px;
+    margin-bottom: 14px;
+  }
+  .url { overflow-wrap: anywhere; }
+
+  /* 結果 */
+  .biglink {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    padding: 16px 18px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: var(--bg);
+    text-decoration: none;
+    color: var(--text);
+    font-weight: 700;
+  }
+  .biglink:hover { border-color: var(--link); }
+  .biglink code { font-weight: normal; color: var(--link); font-size: 0.95rem; }
+  .biglink .arrow { font-size: 1.3rem; color: var(--link); }
+
+  @media (max-width: 640px) {
+    header { padding-top: 28px; }
+    nav ol { grid-template-columns: 1fr 1fr; }
+    section { padding: 18px 14px; border-radius: 14px; }
+    .pair { grid-template-columns: 1fr; }
+    .compare { gap: 10px 8px; }
+    figcaption { font-size: 0.8rem; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <h1><span class="v51">Fable 5.1</span> と <span class="v52">5.2</span> の比較</h1>
+    <p class="lead">同じ指示文を、Fable 5.1 と Fable 5.2 に2回ずつ渡して、出来を比べた記録です。数字の一覧は <a href="results.html">results.html</a> にあります。</p>
+  </header>
+
+  <nav aria-label="目次">
+    <ol>
+      <li><a href="#mario"><span class="num">1</span>マリオ1-1風のゲーム</a></li>
+      <li><a href="#pelican"><span class="num">2</span>自転車に乗るペリカン</a></li>
+      <li><a href="#bugfix"><span class="num">3</span>バグ修正</a></li>
+      <li><a href="#results"><span class="num">4</span>結果の数字</a></li>
+    </ol>
+  </nav>
+
+  <main>
+
+    <section id="mario">
+      <h2><span class="num">1</span>マリオ1-1風のゲーム</h2>
+      <div class="pair">
+        <div class="model m51">
+          <span class="badge">Fable 5.1</span>
+          <div class="runs">
+            <a class="btn" href="mario/fable-5-1_run1.html">1回目</a>
+            <a class="btn" href="mario/fable-5-1_run2.html">2回目</a>
+          </div>
+        </div>
+        <div class="model m52">
+          <span class="badge">Fable 5.2</span>
+          <div class="runs">
+            <a class="btn" href="mario/fable-5-2_run1.html">1回目</a>
+            <a class="btn" href="mario/fable-5-2_run2.html">2回目</a>
+          </div>
+        </div>
+      </div>
+      <p class="keys">操作: <kbd>←</kbd> <kbd>→</kbd> 矢印キーで移動、<kbd>スペース</kbd> か <kbd>Z</kbd> キーでジャンプ</p>
+    </section>
+
+    <section id="pelican">
+      <h2><span class="num">2</span>自転車に乗るペリカン <small>(SVGの絵)</small></h2>
+      <div class="compare">
+        <div class="head"><span class="badge m51">Fable 5.1</span></div>
+        <div class="head"><span class="badge m52">Fable 5.2</span></div>
+
+        <figure class="m51">
+          <a class="img" href="images/svg_fable-5-1_run1.png"><img src="images/svg_fable-5-1_run1.png" alt="Fable 5.1 の1回目が描いた、自転車に乗るペリカン" loading="lazy"></a>
+          <figcaption><span class="run">1回目</span><a href="svg/fable-5-1_run1.svg">SVGの元ファイル</a></figcaption>
+        </figure>
+        <figure class="m52">
+          <a class="img" href="images/svg_fable-5-2_run1.png"><img src="images/svg_fable-5-2_run1.png" alt="Fable 5.2 の1回目が描いた、自転車に乗るペリカン" loading="lazy"></a>
+          <figcaption><span class="run">1回目</span><a href="svg/fable-5-2_run1.svg">SVGの元ファイル</a></figcaption>
+        </figure>
+
+        <figure class="m51">
+          <a class="img" href="images/svg_fable-5-1_run2.png"><img src="images/svg_fable-5-1_run2.png" alt="Fable 5.1 の2回目が描いた、自転車に乗るペリカン" loading="lazy"></a>
+          <figcaption><span class="run">2回目</span><a href="svg/fable-5-1_run2.svg">SVGの元ファイル</a></figcaption>
+        </figure>
+        <figure class="m52">
+          <a class="img" href="images/svg_fable-5-2_run2.png"><img src="images/svg_fable-5-2_run2.png" alt="Fable 5.2 の2回目が描いた、自転車に乗るペリカン" loading="lazy"></a>
+          <figcaption><span class="run">2回目</span><a href="svg/fable-5-2_run2.svg">SVGの元ファイル</a></figcaption>
+        </figure>
+      </div>
+      <p class="hint">画像を押すと、大きく表示されます。</p>
+    </section>
+
+    <section id="bugfix">
+      <h2><span class="num">3</span>バグ修正</h2>
+      <div class="stats">
+        <div class="stat"><b>約185行</b><span>コード</span></div>
+        <div class="stat"><b>14個</b><span>バグ</span></div>
+        <div class="stat"><b>31本</b><span>テスト</span></div>
+      </div>
+      <p class="result">✓ 4本とも、全部直してテストが全部通った。</p>
+      <p class="url">リンク: <a href="https://github.com/monacacao/fable52-comparison/tree/main/bugfix" target="_blank" rel="noopener">https://github.com/monacacao/fable52-comparison/tree/main/bugfix</a><br>(小さい課題は bugfix-small フォルダ)</p>
+    </section>
+
+    <section id="results">
+      <h2><span class="num">4</span>結果の数字</h2>
+      <a class="biglink" href="results.html">
+        <span>数字の一覧を見る <code>results.html</code></span>
+        <span class="arrow" aria-hidden="true">→</span>
+      </a>
+    </section>
+
+  </main>
+</div>
+</body>
+</html>

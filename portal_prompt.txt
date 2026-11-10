@@ -1,0 +1,19 @@
+次の内容を載せた、ブラウザで開ける一覧ページを、1つのHTMLファイル(外部ファイル・外部ライブラリなし)で作ってください。見た目は、あなたが良いと思うデザインで決めてください。スマホでも見やすくすること。
+
+タイトル: Fable 5.1 と 5.2 の比較
+説明: 同じ指示文を、Fable 5.1 と Fable 5.2 に2回ずつ渡して、出来を比べた記録です。数字の一覧は results.html にあります。
+
+載せるもの(リンク先は、すべて相対パスで、そのまま書くこと):
+1. マリオ1-1風のゲーム
+   - Fable 5.1: 1回目 mario/fable-5-1_run1.html / 2回目 mario/fable-5-1_run2.html
+   - Fable 5.2: 1回目 mario/fable-5-2_run1.html / 2回目 mario/fable-5-2_run2.html
+   - 操作: 矢印キーで移動、スペースかZキーでジャンプ
+2. 自転車に乗るペリカン(SVGの絵)
+   - 画像: images/svg_fable-5-1_run1.png, images/svg_fable-5-1_run2.png, images/svg_fable-5-2_run1.png, images/svg_fable-5-2_run2.png(5.1と5.2を見比べられるように並べる)
+   - SVGの元ファイル: svg/fable-5-1_run1.svg, svg/fable-5-1_run2.svg, svg/fable-5-2_run1.svg, svg/fable-5-2_run2.svg
+3. バグ修正
+   - 約185行のコードにバグ14個、テスト31本。4本とも、全部直してテストが全部通った。
+   - リンク: https://github.com/monacacao/fable52-comparison/tree/main/bugfix (小さい課題は bugfix-small フォルダ)
+4. 結果の数字: results.html
+
+HTMLだけを、コードブロックで出力してください。
