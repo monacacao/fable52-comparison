@@ -4,7 +4,7 @@ Claudeの新モデル「Fable 5.2」と、前のモデル「Fable 5.1」に、�
 
 - 条件:同じ指示文、ツールなし、1発生成、各2回、設定は既定
 - 実施日:2026年11月10日
-- 数字は [results.md](results.md) にあります
+- 数字は [results.md](results.md)(表示用は [結果のページ](https://monacacao.github.io/fable52-comparison/results.html)) にあります
 
 ## 遊べるページ
 GitHub Pagesで公開すると、次のページから、ブラウザで開けます。
