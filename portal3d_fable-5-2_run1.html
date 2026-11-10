@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fable 5.1 と 5.2 の比較</title>
+<style>
+  :root {
+    --bg: #060814;
+    --panel: rgba(16, 20, 40, 0.78);
+    --line: rgba(160, 180, 255, 0.16);
+    --text: #eef1ff;
+    --muted: #a9b1d6;
+    --c51: #5ad7ff;
+    --c52: #ff8f5c;
+    --gold: #ffc94a;
+    --ok: #6ee7a8;
+    --radius: 18px;
+  }
+  *, *::before, *::after { box-sizing: border-box; }
+  html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background:
+      radial-gradient(1200px 700px at 15% -10%, rgba(90, 215, 255, 0.10), transparent 60%),
+      radial-gradient(1000px 700px at 90% 10%, rgba(255, 143, 92, 0.10), transparent 60%),
+      var(--bg);
+    color: var(--text);
+    font-family: "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Yu Gothic UI", "Yu Gothic", Meiryo, "Noto Sans JP", system-ui, sans-serif;
+    line-height: 1.8;
+    overflow-x: hidden;
+    overflow-x: clip;
+  }
+  a { color: inherit; }
+  a:focus-visible { outline: 3px solid var(--gold); outline-offset: 3px; border-radius: 8px; }
+  img { max-width: 100%; display: block; }
+  code, .mono { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; }
+
+  #bg {
+    position: fixed; inset: 0; width: 100%; height: 100%;
+    z-index: 0; pointer-events: none;
+  }
+  .wrap { position: relative; z-index: 1; max-width: 1080px; margin: 0 auto; padding: 0 20px; }
+
+  /* ---------- ヒーロー ---------- */
+  .hero {
+    min-height: 92vh; min-height: 92svh;
+    display: grid; place-items: center; text-align: center;
+    padding: 72px 0 56px;
+    perspective: 1100px;
+  }
+  .hero-inner { position: relative; transform-style: preserve-3d; will-change: transform; }
+  .hero-inner::before {
+    content: ""; position: absolute; inset: -12% -8%;
+    background: radial-gradient(closest-side, rgba(6, 8, 20, 0.82), rgba(6, 8, 20, 0.5) 60%, transparent);
+    transform: translateZ(-60px); z-index: -1;
+  }
+  .eyebrow {
+    display: inline-block; letter-spacing: 0.3em; font-size: 0.78rem; color: var(--muted);
+    border: 1px solid var(--line); border-radius: 999px; padding: 4px 16px 4px 20px;
+    background: rgba(10, 13, 30, 0.6);
+    transform: translateZ(30px);
+  }
+  h1 {
+    margin: 22px 0 18px;
+    font-size: clamp(2.1rem, 8.2vw, 5rem);
+    line-height: 1.25; font-weight: 900; letter-spacing: 0.02em;
+    text-wrap: balance;
+    transform: translateZ(70px);
+    text-shadow:
+      0 1px 0 rgba(255,255,255,0.12),
+      0 2px 0 #1a2040, 0 4px 0 #151a36, 0 6px 0 #10142b,
+      0 18px 40px rgba(0, 0, 0, 0.75);
+  }
+  h1 .nb { white-space: nowrap; }
+  .v51 { color: var(--c51); }
+  .v52 { color: var(--c52); }
+  h1 .v51 { text-shadow: 0 2px 0 #114a66, 0 4px 0 #0d3950, 0 6px 0 #09283a, 0 0 34px rgba(90,215,255,0.55); }
+  h1 .v52 { text-shadow: 0 2px 0 #7a3518, 0 4px 0 #5e2811, 0 6px 0 #431c0b, 0 0 34px rgba(255,143,92,0.55); }
+  .lead {
+    max-width: 40em; margin: 0 auto; color: #d5dbf7; font-size: clamp(0.98rem, 2.6vw, 1.1rem);
+    transform: translateZ(40px);
+    text-shadow: 0 2px 12px rgba(0,0,0,0.9);
+  }
+  .lead a { color: var(--gold); font-weight: 700; text-underline-offset: 4px; }
+  .nav {
+    display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;
+    margin: 34px 0 0; padding: 0; list-style: none;
+    transform: translateZ(50px);
+  }
+  .nav a {
+    display: inline-flex; align-items: center; gap: 8px; min-height: 44px;
+    padding: 6px 16px; border-radius: 999px; text-decoration: none; font-weight: 700; font-size: 0.92rem;
+    background: rgba(18, 23, 48, 0.8); border: 1px solid var(--line);
+    transition: transform .25s, border-color .25s, background .25s;
+  }
+  .nav a:hover { transform: translateY(-3px); border-color: rgba(255,255,255,0.45); background: rgba(30, 38, 76, 0.9); }
+  .nav .n { color: var(--gold); font-size: 0.78rem; }
+  .scroll-hint {
+    margin-top: 44px; color: var(--muted); font-size: 0.8rem; letter-spacing: 0.2em;
+    animation: bob 2.2s ease-in-out infinite;
+  }
+  @keyframes bob { 50% { transform: translateY(8px); opacity: 0.55; } }
+
+  /* ---------- セクション共通 ---------- */
+  section { padding: 56px 0; }
+  .sec-head { display: flex; align-items: center; gap: 18px; margin-bottom: 26px; }
+  .sec-num {
+    font-size: clamp(2.6rem, 9vw, 4.2rem); font-weight: 900; line-height: 1;
+    color: transparent; -webkit-text-stroke: 1.5px rgba(200, 212, 255, 0.55);
+    text-shadow: 4px 4px 0 rgba(90, 215, 255, 0.18), 8px 8px 0 rgba(255, 143, 92, 0.14);
+    flex: none;
+  }
+  .sec-head h2 { margin: 0; font-size: clamp(1.35rem, 4.6vw, 2rem); line-height: 1.4; }
+  .sec-head p { margin: 4px 0 0; color: var(--muted); font-size: 0.95rem; }
+  .sec-head .grow { flex: 1; min-width: 0; }
+
+  .reveal { transition: opacity .8s ease, transform .9s cubic-bezier(.2,.8,.2,1); transform-origin: 50% 100%; }
+  .js .reveal { opacity: 0; transform: perspective(1000px) rotateX(22deg) translateY(50px) scale(0.96); }
+  .js .reveal.in { opacity: 1; transform: none; }
+
+  .panel {
+    background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius);
+    padding: 20px;
+    -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
+  }
+  .model-tag {
+    display: inline-flex; align-items: center; gap: 10px;
+    font-weight: 900; font-size: 1.12rem; margin: 0 0 14px;
+  }
+  .model-tag::before {
+    content: ""; width: 12px; height: 12px; border-radius: 50%;
+    background: currentColor; box-shadow: 0 0 16px currentColor;
+  }
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+
+  /* ---------- 傾くカード ---------- */
+  .tilt {
+    --rx: 0deg; --ry: 0deg; --mx: 50%; --my: 50%;
+    position: relative; transform-style: preserve-3d;
+    transform: perspective(800px) rotateX(var(--rx)) rotateY(var(--ry));
+    transition: transform .35s ease-out, box-shadow .35s, border-color .35s;
+  }
+  .tilt.moving { transition: transform .06s linear, box-shadow .35s, border-color .35s; }
+  .tilt::after {
+    content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+    background: radial-gradient(260px circle at var(--mx) var(--my), rgba(255,255,255,0.20), transparent 60%);
+    opacity: 0; transition: opacity .3s;
+  }
+  .tilt:hover::after { opacity: 1; }
+
+  /* ---------- 01 マリオ ---------- */
+  .cube-box { width: 64px; height: 64px; perspective: 500px; flex: none; }
+  .cube {
+    --s: 48px;
+    width: var(--s); height: var(--s); margin: 8px; position: relative;
+    transform-style: preserve-3d;
+    transform: rotateX(-22deg) rotateY(35deg);
+    animation: spin 7s linear infinite;
+  }
+  .cube i {
+    position: absolute; inset: 0; display: grid; place-items: center;
+    font: 900 28px/1 ui-monospace, Menlo, Consolas, monospace; font-style: normal; color: #6b3a00;
+    background: linear-gradient(145deg, #ffd96a, #f2a51c);
+    border: 3px solid #8a4b00; border-radius: 6px;
+    box-shadow: inset 0 0 0 3px rgba(255, 240, 180, 0.55);
+    text-shadow: 2px 2px 0 rgba(255, 245, 200, 0.7);
+  }
+  .cube i:nth-child(1) { transform: translateZ(calc(var(--s) / 2)); }
+  .cube i:nth-child(2) { transform: rotateY(90deg) translateZ(calc(var(--s) / 2)); }
+  .cube i:nth-child(3) { transform: rotateY(180deg) translateZ(calc(var(--s) / 2)); }
+  .cube i:nth-child(4) { transform: rotateY(-90deg) translateZ(calc(var(--s) / 2)); }
+  .cube i:nth-child(5) { transform: rotateX(90deg) translateZ(calc(var(--s) / 2)); }
+  .cube i:nth-child(6) { transform: rotateX(-90deg) translateZ(calc(var(--s) / 2)); }
+  @keyframes spin {
+    from { transform: rotateX(-22deg) rotateY(0deg); }
+    to   { transform: rotateX(-22deg) rotateY(360deg); }
+  }
+
+  .keys { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; margin: 0 0 22px; color: #d5dbf7; font-size: 0.95rem; }
+  .keys .grp { display: inline-flex; align-items: center; gap: 6px; }
+  kbd {
+    display: inline-grid; place-items: center; min-width: 34px; height: 34px; padding: 0 9px;
+    font: 700 0.85rem/1 ui-monospace, Menlo, Consolas, monospace; color: #fff;
+    background: linear-gradient(#2a3260, #1a2044);
+    border: 1px solid rgba(190, 205, 255, 0.35); border-bottom-width: 4px; border-radius: 8px;
+  }
+
+  .runs { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .run {
+    display: block; text-decoration: none; padding: 18px 16px 16px; border-radius: 14px; min-height: 132px;
+    background: linear-gradient(160deg, rgba(40, 50, 100, 0.75), rgba(14, 18, 40, 0.9));
+    border: 1px solid var(--line);
+    box-shadow: 0 10px 24px rgba(0,0,0,0.4);
+  }
+  .run:hover { border-color: var(--accent); box-shadow: 0 22px 44px rgba(0,0,0,0.55), 0 0 30px -6px var(--accent); }
+  .run:active { transform: perspective(800px) scale(0.97); }
+  .run > * { display: block; transform: translateZ(28px); }
+  .run .t { font-size: 1.35rem; font-weight: 900; line-height: 1.3; }
+  .run .path { font-size: 0.74rem; color: var(--muted); word-break: break-all; line-height: 1.5; margin-top: 4px; }
+  .run .go {
+    display: inline-block; margin-top: 12px; font-weight: 800; font-size: 0.9rem; color: #0a0d1e;
+    background: var(--accent); padding: 3px 14px; border-radius: 999px;
+  }
+  .m51 { --accent: var(--c51); }
+  .m52 { --accent: var(--c52); }
+  .m51 .model-tag { color: var(--c51); }
+  .m52 .model-tag { color: var(--c52); }
+
+  /* ---------- 02 ペリカン ---------- */
+  .gallery { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .gcol { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+  .gcol .model-tag { margin: 0; justify-content: center; }
+  figure { margin: 0; }
+  .shot {
+    border-radius: 14px; padding: 10px;
+    background: var(--panel); border: 1px solid var(--line);
+    box-shadow: 0 14px 34px rgba(0,0,0,0.45);
+  }
+  .shot:hover { border-color: var(--accent); box-shadow: 0 24px 50px rgba(0,0,0,0.6), 0 0 30px -8px var(--accent); }
+  .shot .pic {
+    display: block; border-radius: 9px; overflow: hidden; background: #f4f6fb;
+    aspect-ratio: 4 / 3; transform: translateZ(24px);
+  }
+  .shot img { width: 100%; height: 100%; object-fit: contain; color: #333; font-size: 0.8rem; }
+  .shot figcaption {
+    display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 10px;
+    padding: 10px 4px 2px; transform: translateZ(16px);
+  }
+  .shot .rn { font-weight: 800; }
+  .shot .src {
+    display: inline-flex; align-items: center; min-height: 40px; font-size: 0.82rem; font-weight: 700;
+    color: var(--accent); text-underline-offset: 4px;
+  }
+
+  /* ---------- 03 バグ修正 ---------- */
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 18px; }
+  .stat {
+    text-align: center; padding: 20px 8px 16px; border-radius: 14px;
+    background: linear-gradient(160deg, rgba(40, 50, 100, 0.7), rgba(14, 18, 40, 0.9));
+    border: 1px solid var(--line);
+  }
+  .stat > * { display: block; transform: translateZ(24px); }
+  .stat .num { font-size: clamp(2rem, 7vw, 3rem); font-weight: 900; line-height: 1.1; font-variant-numeric: tabular-nums; }
+  .stat .num small { font-size: 0.4em; font-weight: 700; margin-left: 2px; color: var(--muted); }
+  .stat .lbl { color: var(--muted); font-size: 0.86rem; margin-top: 4px; }
+  .stat.good .num { color: var(--ok); text-shadow: 0 0 26px rgba(110, 231, 168, 0.45); }
+  .passes { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 0 0 20px; padding: 0; list-style: none; }
+  .passes li {
+    display: flex; flex-direction: column; gap: 2px; padding: 10px 12px; border-radius: 12px;
+    background: rgba(110, 231, 168, 0.08); border: 1px solid rgba(110, 231, 168, 0.3);
+    font-size: 0.86rem; line-height: 1.5;
+  }
+  .passes b { font-size: 0.92rem; }
+  .passes .ok { color: var(--ok); font-weight: 800; }
+  .note { margin: 0 0 18px; color: #d5dbf7; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 10px; min-height: 48px; max-width: 100%;
+    padding: 10px 22px; border-radius: 12px; text-decoration: none; font-weight: 800;
+    background: linear-gradient(135deg, #2b3570, #1b2250); border: 1px solid rgba(190, 205, 255, 0.35);
+    transition: transform .25s, box-shadow .25s, border-color .25s;
+  }
+  .btn:hover { transform: translateY(-3px); border-color: #fff; box-shadow: 0 14px 30px rgba(0,0,0,0.5); }
+  .url { display: block; margin-top: 10px; font-size: 0.76rem; color: var(--muted); word-break: break-all; line-height: 1.5; }
+
+  /* ---------- 04 結果 ---------- */
+  .result-card {
+    display: flex; align-items: center; justify-content: space-between; gap: 20px;
+    text-decoration: none; padding: 30px 26px; border-radius: 22px;
+    background:
+      linear-gradient(120deg, rgba(90, 215, 255, 0.22), rgba(255, 143, 92, 0.22)),
+      rgba(14, 18, 40, 0.9);
+    border: 1px solid rgba(220, 228, 255, 0.35);
+    box-shadow: 0 30px 70px rgba(0,0,0,0.55);
+  }
+  .result-card > * { transform: translateZ(34px); }
+  .result-card .big { display: block; font-size: clamp(1.3rem, 5vw, 2rem); font-weight: 900; line-height: 1.4; }
+  .result-card .sub { display: block; color: #d5dbf7; font-size: 0.95rem; }
+  .result-card .arrow {
+    flex: none; width: 60px; height: 60px; border-radius: 50%; display: grid; place-items: center;
+    font-size: 1.6rem; font-weight: 900; color: #0a0d1e; background: var(--gold);
+    box-shadow: 0 0 34px rgba(255, 201, 74, 0.55);
+    animation: nudge 1.8s ease-in-out infinite;
+  }
+  @keyframes nudge { 50% { transform: translateZ(34px) translateX(7px); } }
+
+  footer { padding: 40px 0 60px; text-align: center; color: var(--muted); font-size: 0.82rem; }
+
+  /* ---------- スマホ ---------- */
+  @media (max-width: 760px) {
+    .two { grid-template-columns: 1fr; }
+    .stats { grid-template-columns: 1fr 1fr; }
+    .passes { grid-template-columns: 1fr 1fr; }
+    section { padding: 40px 0; }
+    .panel { padding: 16px; }
+  }
+  @media (max-width: 480px) {
+    .wrap { padding: 0 14px; }
+    .sec-head { gap: 12px; }
+    .gallery { gap: 10px; }
+    .gcol { gap: 10px; }
+    .shot { padding: 6px; }
+    .shot figcaption { padding: 6px 2px 0; }
+    .runs { gap: 10px; }
+    .run { padding: 14px 12px; }
+    .run .t { font-size: 1.15rem; }
+    .result-card { padding: 22px 18px; }
+    .result-card .arrow { width: 50px; height: 50px; }
+    .cube-box { width: 52px; height: 52px; }
+    .cube { --s: 38px; margin: 7px; }
+    .cube i { font-size: 22px; }
+  }
+
+  /* ---------- 動きを抑える設定 ---------- */
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+    .js .reveal { opacity: 1; transform: none; }
+    .tilt { transform: none !important; }
+    .nav a:hover, .btn:hover { transform: none; }
+  }
+</style>
+</head>
+<body>
+<canvas id="bg" aria-hidden="true"></canvas>
+
+<div class="wrap">
+
+  <header class="hero">
+    <div class="hero-inner" id="heroInner">
+      <span class="eyebrow">COMPARISON LOG</span>
+      <h1><span class="nb">Fable <span class="v51">5.1</span> と</span> <span class="nb"><span class="v52">5.2</span> の比較</span></h1>
+      <p class="lead">同じ指示文を、Fable 5.1 と Fable 5.2 に2回ずつ渡して、出来を比べた記録です。数字の一覧は <a href="results.html">results.html</a> にあります。</p>
+      <ul class="nav">
+        <li><a href="#mario"><span class="n">01</span>マリオ1-1風のゲーム</a></li>
+        <li><a href="#pelican"><span class="n">02</span>自転車に乗るペリカン</a></li>
+        <li><a href="#bugfix"><span class="n">03</span>バグ修正</a></li>
+        <li><a href="#results"><span class="n">04</span>結果の数字</a></li>
+      </ul>
+      <div class="scroll-hint" aria-hidden="true">▼ SCROLL</div>
+    </div>
+  </header>
+
+  <main>
+
+    <!-- 01 マリオ -->
+    <section id="mario">
+      <div class="sec-head reveal">
+        <span class="sec-num" aria-hidden="true">01</span>
+        <div class="grow">
+          <h2>マリオ1-1風のゲーム</h2>
+          <p>4本とも、ブラウザでそのまま遊べます。</p>
+        </div>
+        <div class="cube-box" aria-hidden="true">
+          <div class="cube"><i>?</i><i>?</i><i>?</i><i>?</i><i></i><i></i></div>
+        </div>
+      </div>
+
+      <p class="keys reveal">
+        <span>操作:</span>
+        <span class="grp"><kbd>←</kbd><kbd>→</kbd> 矢印キーで移動</span>
+        <span class="grp"><kbd>Space</kbd> か <kbd>Z</kbd> でジャンプ</span>
+      </p>
+
+      <div class="two">
+        <div class="panel m51 reveal">
+          <h3 class="model-tag">Fable 5.1</h3>
+          <div class="runs">
+            <a class="run tilt" href="mario/fable-5-1_run1.html">
+              <span class="t">1回目</span>
+              <span class="path mono">mario/fable-5-1_run1.html</span>
+              <span class="go">あそぶ →</span>
+            </a>
+            <a class="run tilt" href="mario/fable-5-1_run2.html">
+              <span class="t">2回目</span>
+              <span class="path mono">mario/fable-5-1_run2.html</span>
+              <span class="go">あそぶ →</span>
+            </a>
+          </div>
+        </div>
+        <div class="panel m52 reveal">
+          <h3 class="model-tag">Fable 5.2</h3>
+          <div class="runs">
+            <a class="run tilt" href="mario/fable-5-2_run1.html">
+              <span class="t">1回目</span>
+              <span class="path mono">mario/fable-5-2_run1.html</span>
+              <span class="go">あそぶ →</span>
+            </a>
+            <a class="run tilt" href="mario/fable-5-2_run2.html">
+              <span class="t">2回目</span>
+              <span class="path mono">mario/fable-5-2_run2.html</span>
+              <span class="go">あそぶ →</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 02 ペリカン -->
+    <section id="pelican">
+      <div class="sec-head reveal">
+        <span class="sec-num" aria-hidden="true">02</span>
+        <div class="grow">
+          <h2>自転車に乗るペリカン(SVGの絵)</h2>
+          <p>左が 5.1、右が 5.2。画像を押すと大きく開きます。</p>
+        </div>
+      </div>
+
+      <div class="gallery">
+        <div class="gcol m51 reveal">
+          <h3 class="model-tag">Fable 5.1</h3>
+          <figure class="shot tilt">
+            <a class="pic" href="images/svg_fable-5-1_run1.png"><img src="images/svg_fable-5-1_run1.png" alt="Fable 5.1 の1回目が描いた、自転車に乗るペリカン" loading="lazy"></a>
+            <figcaption><span class="rn">1回目</span><a class="src" href="svg/fable-5-1_run1.svg">SVGの元ファイル</a></figcaption>
+          </figure>
+          <figure class="shot tilt">
+            <a class="pic" href="images/svg_fable-5-1_run2.png"><img src="images/svg_fable-5-1_run2.png" alt="Fable 5.1 の2回目が描いた、自転車に乗るペリカン" loading="lazy"></a>
+            <figcaption><span class="rn">2回目</span><a class="src" href="svg/fable-5-1_run2.svg">SVGの元ファイル</a></figcaption>
+          </figure>
+        </div>
+        <div class="gcol m52 reveal">
+          <h3 class="model-tag">Fable 5.2</h3>
+          <figure class="shot tilt">
+            <a class="pic" href="images/svg_fable-5-2_run1.png"><img src="images/svg_fable-5-2_run1.png" alt="Fable 5.2 の1回目が描いた、自転車に乗るペリカン" loading="lazy"></a>
+            <figcaption><span class="rn">1回目</span><a class="src" href="svg/fable-5-2_run1.svg">SVGの元ファイル</a></figcaption>
+          </figure>
+          <figure class="shot tilt">
+            <a class="pic" href="images/svg_fable-5-2_run2.png"><img src="images/svg_fable-5-2_run2.png" alt="Fable 5.2 の2回目が描いた、自転車に乗るペリカン" loading="lazy"></a>
+            <figcaption><span class="rn">2回目</span><a class="src" href="svg/fable-5-2_run2.svg">SVGの元ファイル</a></figcaption>
+          </figure>
+        </div>
+      </div>
+    </section>
+
+    <!-- 03 バグ修正 -->
+    <section id="bugfix">
+      <div class="sec-head reveal">
+        <span class="sec-num" aria-hidden="true">03</span>
+        <div class="grow">
+          <h2>バグ修正</h2>
+          <p>約185行のコードにバグ14個、テスト31本。</p>
+        </div>
+      </div>
+
+      <div class="panel reveal">
+        <div class="stats">
+          <div class="stat tilt"><span class="num">約<span data-count="185">185</span><small>行</small></span><span class="lbl">コードの長さ</span></div>
+          <div class="stat tilt"><span class="num"><span data-count="14">14</span><small>個</small></span><span class="lbl">仕込まれたバグ</span></div>
+          <div class="stat tilt"><span class="num"><span data-count="31">31</span><small>本</small></span><span class="lbl">テスト</span></div>
+          <div class="stat tilt good"><span class="num"><span data-count="4">4</span><small>/ 4本</small></span><span class="lbl">全部直して全テスト通過</span></div>
+        </div>
+
+        <ul class="passes">
+          <li><b class="v51">Fable 5.1 1回目</b><span class="ok">✓ テスト全部通過</span></li>
+          <li><b class="v51">Fable 5.1 2回目</b><span class="ok">✓ テスト全部通過</span></li>
+          <li><b class="v52">Fable 5.2 1回目</b><span class="ok">✓ テスト全部通過</span></li>
+          <li><b class="v52">Fable 5.2 2回目</b><span class="ok">✓ テスト全部通過</span></li>
+        </ul>
+
+        <p class="note">4本とも、全部直してテストが全部通った。小さい課題は <code>bugfix-small</code> フォルダにあります。</p>
+
+        <a class="btn" href="https://github.com/monacacao/fable52-comparison/tree/main/bugfix" target="_blank" rel="noopener">GitHub でコードを見る ↗</a>
+        <span class="url mono">https://github.com/monacacao/fable52-comparison/tree/main/bugfix</span>
+      </div>
+    </section>
+
+    <!-- 04 結果 -->
+    <section id="results">
+      <div class="sec-head reveal">
+        <span class="sec-num" aria-hidden="true">04</span>
+        <div class="grow">
+          <h2>結果の数字</h2>
+          <p>数字の一覧は別ページにまとめてあります。</p>
+        </div>
+      </div>
+
+      <div class="reveal">
+        <a class="result-card tilt" href="results.html">
+          <span>
+            <span class="big">results.html を開く</span>
+            <span class="sub">Fable 5.1 と 5.2、それぞれ2回分の数字の一覧</span>
+          </span>
+          <span class="arrow" aria-hidden="true">→</span>
+        </a>
+      </div>
+    </section>
+
+  </main>
+
+  <footer>Fable 5.1 と 5.2 の比較</footer>
+</div>
+
+<script>
+(function () {
+  'use strict';
+  var root = document.documentElement;
+  root.classList.add('js');
+
+  var mq = window.matchMedia('(prefers-reduced-motion: reduce)');
+  var reduced = mq.matches;
+
+  /* ---------- スクロールで現れる ---------- */
+  var reveals = [].slice.call(document.querySelectorAll('.reveal'));
+  var counters = [].slice.call(document.querySelectorAll('[data-count]'));
+
+  function countUp(el) {
+    var target = parseInt(el.getAttribute('data-count'), 10);
+    if (reduced || !window.requestAnimationFrame) { el.textContent = target; return; }
+    var start = null, dur = 1100;
+    function step(ts) {
+      if (start === null) start = ts;
+      var p = Math.min(1, (ts - start) / dur);
+      var e = 1 - Math.pow(1 - p, 3);
+      el.textContent = Math.round(target * e);
+      if (p < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
+
+  if ('IntersectionObserver' in window) {
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) {
+        if (!en.isIntersecting) return;
+        en.target.classList.add('in');
+        io.unobserve(en.target);
+      });
+    }, { threshold: 0.12, rootMargin: '0px 0px -6% 0px' });
+    reveals.forEach(function (el) { io.observe(el); });
+
+    var cio = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) {
+        if (!en.isIntersecting) return;
+        countUp(en.target);
+        cio.unobserve(en.target);
+      });
+    }, { threshold: 0.6 });
+    counters.forEach(function (el) { cio.observe(el); });
+  } else {
+    reveals.forEach(function (el) { el.classList.add('in'); });
+  }
+
+  /* ---------- カードの傾き(マウスのあるとき) ---------- */
+  var finePointer = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+  if (finePointer) {
+    [].forEach.call(document.querySelectorAll('.tilt'), function (el) {
+      el.addEventListener('pointermove', function (e) {
+        if (reduced) return;
+        var r = el.getBoundingClientRect();
+        var x = (e.clientX - r.left) / r.width;
+        var y = (e.clientY - r.top) / r.height;
+        el.classList.add('moving');
+        el.style.setProperty('--ry', ((x - 0.5) * 16).toFixed(2) + 'deg');
+        el.style.setProperty('--rx', ((0.5 - y) * 14).toFixed(2) + 'deg');
+        el.style.setProperty('--mx', (x * 100).toFixed(1) + '%');
+        el.style.setProperty('--my', (y * 100).toFixed(1) + '%');
+      });
+      el.addEventListener('pointerleave', function () {
+        el.classList.remove('moving');
+        el.style.setProperty('--ry', '0deg');
+        el.style.setProperty('--rx', '0deg');
+      });
+    });
+  }
+
+  /* ---------- 背景:つながった2つの輪(5.1 と 5.2)の3D粒子 ---------- */
+  var cv = document.getElementById('bg');
+  var ctx = cv.getContext && cv.getContext('2d');
+  var heroInner = document.getElementById('heroInner');
+  if (!ctx) return;
+
+  var TAU = Math.PI * 2;
+  var W = 0, H = 0, dpr = 1;
+  var pts = [], stars = [];
+  var tx = 0, ty = 0, px = 0, py = 0;   // ポインタの位置(目標値と、なめらかにした値)
+  var rafId = 0, lastW = -1;
+
+  function build() {
+    var n = window.innerWidth < 700 ? 560 : 1100;
+    var i;
+    pts = [];
+    for (i = 0; i < n * 2; i++) {
+      pts.push({
+        ring: i < n ? 0 : 1,
+        u: Math.random() * TAU,
+        v: Math.random() * TAU,
+        s: 0.5 + Math.random() * 1.0,
+        r: 0.16 + Math.pow(Math.random(), 0.6) * 0.16,
+        size: 1 + Math.random() * 1.8
+      });
+    }
+    stars = [];
+    var m = window.innerWidth < 700 ? 160 : 320;
+    for (i = 0; i < m; i++) {
+      stars.push({
+        x: (Math.random() - 0.5) * 9,
+        y: (Math.random() - 0.5) * 9,
+        z: (Math.random() - 0.5) * 9,
+        size: 0.6 + Math.random() * 1.4
+      });
+    }
+  }
+
+  function resize() {
+    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    W = window.innerWidth;
+    H = window.innerHeight;
+    cv.width = Math.round(W * dpr);
+    cv.height = Math.round(H * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    if (W !== lastW) { build(); lastW = W; }
+    if (reduced) draw(9000);
+  }
+
+  function draw(t) {
+    var sc = reduced ? 0 : (window.pageYOffset || 0) / Math.max(1, H);
+    var fade = Math.max(0.3, 1 - sc * 0.55);
+    var ay = t * 0.00022 + sc * 1.1 + px * 0.7;
+    var ax = 0.45 + Math.sin(t * 0.00017) * 0.18 + py * 0.5;
+    var cy_ = Math.cos(ay), sy_ = Math.sin(ay), cx_ = Math.cos(ax), sx_ = Math.sin(ax);
+    var cx = W / 2, cy = H * 0.44;
+    var scale = Math.min(W, H) * 0.3 * (1 + Math.min(sc, 3) * 0.3);
+    var D = 3.6;
+    var i, p, x, y, z, x2, y2, z2, f, s, a;
+
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.clearRect(0, 0, W, H);
+    ctx.globalCompositeOperation = 'lighter';
+
+    // 星
+    var sa = ay * 0.25, cs = Math.cos(sa), ss = Math.sin(sa);
+    ctx.fillStyle = '#c9d6ff';
+    for (i = 0; i < stars.length; i++) {
+      p = stars[i];
+      x2 = p.x * cs + p.z * ss;
+      z2 = -p.x * ss + p.z * cs;
+      f = 6 / (6 + z2);
+      if (f <= 0 || f > 6) continue;
+      ctx.globalAlpha = Math.min(0.75, 0.2 * f * f) * fade;
+      s = p.size * f;
+      ctx.fillRect(cx + x2 * f * scale * 0.9, cy + p.y * f * scale * 0.9, s, s);
+    }
+
+    // 輪
+    for (i = 0; i < pts.length; i++) {
+      p = pts[i];
+      var u = p.u + t * 0.00028 * p.s;
+      var v = p.v + u * 3 + t * 0.0004;
+      var rr = 1 + p.r * Math.cos(v);
+      if (p.ring === 0) {
+        x = rr * Math.cos(u) - 0.55; y = rr * Math.sin(u); z = p.r * Math.sin(v);
+        if (i === 0) ctx.fillStyle = '#5ad7ff';
+      } else {
+        x = rr * Math.cos(u) + 0.55; y = p.r * Math.sin(v); z = rr * Math.sin(u);
+        if (pts[i - 1].ring === 0) ctx.fillStyle = '#ff8f5c';
+      }
+      x2 = x * cy_ + z * sy_;
+      z2 = -x * sy_ + z * cy_;
+      y2 = y * cx_ - z2 * sx_;
+      z2 = y * sx_ + z2 * cx_;
+      f = D / (D + z2);
+      a = (f - 0.62) * 1.5;
+      if (a <= 0) continue;
+      ctx.globalAlpha = Math.min(0.9, a) * fade;
+      s = p.size * f * f;
+      ctx.fillRect(cx + x2 * f * scale - s / 2, cy + y2 * f * scale - s / 2, s, s);
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  function frame(t) {
+    rafId = 0;
+    px += (tx - px) * 0.06;
+    py += (ty - py) * 0.06;
+    draw(t);
+    if (heroInner && finePointer) {
+      heroInner.style.transform = 'rotateY(' + (px * 14).toFixed(2) + 'deg) rotateX(' + (-py * 10).toFixed(2) + 'deg)';
+    }
+    start();
+  }
+  function start() {
+    if (reduced || document.hidden || rafId) return;
+    rafId = requestAnimationFrame(frame);
+  }
+  function stop() {
+    if (rafId) { cancelAnimationFrame(rafId); rafId = 0; }
+  }
+
+  window.addEventListener('pointermove', function (e) {
+    if (e.pointerType === 'touch') return;
+    tx = e.clientX / Math.max(1, W) - 0.5;
+    ty = e.clientY / Math.max(1, H) - 0.5;
+  }, { passive: true });
+  window.addEventListener('resize', resize);
+  document.addEventListener('visibilitychange', function () {
+    if (document.hidden) stop(); else start();
+  });
+
+  function onMotionChange() {
+    reduced = mq.matches;
+    if (reduced) {
+      stop();
+      if (heroInner) heroInner.style.transform = '';
+      draw(9000);
+    } else {
+      start();
+    }
+  }
+  if (mq.addEventListener) mq.addEventListener('change', onMotionChange);
+  else if (mq.addListener) mq.addListener(onMotionChange);
+
+  resize();
+  if (reduced) draw(9000); else start();
+})();
+</script>
+</body>
+</html>

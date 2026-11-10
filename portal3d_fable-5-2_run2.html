@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fable 5.1 と 5.2 の比較</title>
+<meta name="description" content="同じ指示文を、Fable 5.1 と Fable 5.2 に2回ずつ渡して、出来を比べた記録です。">
+<style>
+:root{
+  --bg:#070614;
+  --panel:rgba(16,13,40,.86);
+  --line:rgba(160,150,255,.22);
+  --text:#eeecff;
+  --muted:#aeabd0;
+  --a:#4fd8ff;   /* Fable 5.1 */
+  --b:#ff6ad5;   /* Fable 5.2 */
+  --gold:#ffc857;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{
+  margin:0;background:var(--bg);color:var(--text);
+  font-family:"Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic UI","Yu Gothic","Noto Sans JP",Meiryo,system-ui,sans-serif;
+  line-height:1.75;overflow-x:hidden;
+}
+a{color:inherit}
+img{max-width:100%;display:block}
+#bg{position:fixed;inset:0;width:100%;height:100%;z-index:0;opacity:.8;pointer-events:none}
+.veil{position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:linear-gradient(180deg,rgba(7,6,20,.15),rgba(7,6,20,.55) 70%,rgba(7,6,20,.8))}
+main,header,footer{position:relative;z-index:1}
+main{overflow-x:clip}
+.wrap{width:min(1080px,100% - 32px);margin-inline:auto}
+
+/* ---------- ヒーロー ---------- */
+.hero{min-height:92vh;min-height:92svh;display:grid;place-items:center;text-align:center;padding:48px 0 32px}
+.stage{perspective:900px;display:grid;place-items:center;height:clamp(190px,44vw,270px)}
+.float{animation:bob 5s ease-in-out infinite;transform-style:preserve-3d}
+.cube{--s:clamp(110px,28vw,170px);width:var(--s);height:var(--s);position:relative;transform-style:preserve-3d;
+  transform:rotateX(-18deg) rotateY(-32deg);animation:spin 16s linear infinite}
+.cube>i{position:absolute;inset:0;display:grid;place-items:center;font-style:normal;font-weight:800;
+  font-size:calc(var(--s)*.36);letter-spacing:-.02em;border:2px solid;border-radius:10px;
+  background:rgba(10,8,30,.78);backface-visibility:visible}
+.cube>i:nth-child(1){transform:translateZ(calc(var(--s)/2))}
+.cube>i:nth-child(2){transform:rotateY(90deg) translateZ(calc(var(--s)/2))}
+.cube>i:nth-child(3){transform:rotateY(180deg) translateZ(calc(var(--s)/2))}
+.cube>i:nth-child(4){transform:rotateY(-90deg) translateZ(calc(var(--s)/2))}
+.cube>i:nth-child(5){transform:rotateX(90deg) translateZ(calc(var(--s)/2))}
+.cube>i:nth-child(6){transform:rotateX(-90deg) translateZ(calc(var(--s)/2))}
+.cube .fa{color:var(--a);border-color:var(--a);box-shadow:0 0 28px rgba(79,216,255,.45),inset 0 0 28px rgba(79,216,255,.25);text-shadow:0 0 18px rgba(79,216,255,.8)}
+.cube .fb{color:var(--b);border-color:var(--b);box-shadow:0 0 28px rgba(255,106,213,.45),inset 0 0 28px rgba(255,106,213,.25);text-shadow:0 0 18px rgba(255,106,213,.8)}
+.cube .fv{color:var(--gold);border-color:var(--gold);font-size:calc(var(--s)*.26);box-shadow:inset 0 0 28px rgba(255,200,87,.25)}
+@keyframes spin{from{transform:rotateX(-18deg) rotateY(0)}to{transform:rotateX(-18deg) rotateY(360deg)}}
+@keyframes bob{0%,100%{transform:translateY(-8px)}50%{transform:translateY(10px)}}
+
+h1{margin:.5em 0 .3em;font-size:clamp(1.9rem,7.2vw,4rem);line-height:1.2;font-weight:900;letter-spacing:.01em;
+  text-shadow:0 6px 30px rgba(0,0,0,.6)}
+h1 .ta{color:var(--a);text-shadow:0 0 26px rgba(79,216,255,.55)}
+h1 .tb{color:var(--b);text-shadow:0 0 26px rgba(255,106,213,.55)}
+h1 span{display:inline-block}
+.lead{max-width:40em;margin:0 auto;color:var(--text);font-size:clamp(.98rem,2.6vw,1.12rem)}
+.lead a{color:var(--gold);font-weight:700;text-underline-offset:4px}
+.nav{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin:28px 0 0;padding:0;list-style:none}
+.nav a{display:block;padding:8px 16px;border:1px solid var(--line);border-radius:999px;background:rgba(16,13,40,.7);
+  text-decoration:none;font-size:.92rem;transition:transform .2s,border-color .2s,background .2s}
+.nav a:hover,.nav a:focus-visible{border-color:var(--gold);background:rgba(40,30,80,.85);transform:translateY(-2px)}
+.nav b{color:var(--gold);margin-right:.4em}
+
+/* ---------- セクション ---------- */
+section{perspective:1400px;margin:0 0 clamp(36px,7vw,72px);scroll-margin-top:16px}
+.js .reveal{opacity:0;transform:perspective(900px) rotateX(16deg) translateY(50px) scale(.97);transform-origin:50% 0;
+  transition:opacity .8s ease,transform .9s cubic-bezier(.2,.8,.2,1)}
+.js .reveal.in{opacity:1;transform:none}
+.card{position:relative;border:1px solid var(--line);border-radius:22px;background:var(--panel);
+  padding:clamp(20px,4.5vw,40px);
+  box-shadow:0 30px 80px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.08);
+  transform:rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg));transition:transform .25s ease-out;overflow:hidden}
+.card::after{content:"";position:absolute;inset:0;pointer-events:none;opacity:0;transition:opacity .3s;
+  background:radial-gradient(520px circle at var(--mx,50%) var(--my,0%),rgba(150,140,255,.16),transparent 60%)}
+.card.hot::after{opacity:1}
+.head{display:flex;align-items:center;gap:14px;margin:0 0 6px}
+.num{flex:none;width:46px;height:46px;display:grid;place-items:center;border-radius:12px;font-weight:900;font-size:1.25rem;
+  color:#14102e;background:linear-gradient(135deg,var(--gold),#ff9d5c);
+  box-shadow:0 5px 0 #a8641c,0 12px 22px rgba(0,0,0,.45);transform:rotate(-4deg)}
+h2{margin:0;font-size:clamp(1.3rem,4.6vw,1.9rem);line-height:1.3}
+.sub{margin:8px 0 22px;color:var(--muted)}
+.m51{color:var(--a)} .m52{color:var(--b)}
+
+/* ---------- マリオ ---------- */
+.qstage{perspective:300px;margin-left:auto;flex:none;width:44px;height:52px;display:grid;place-items:center}
+.qbox{animation:hop 2.4s cubic-bezier(.3,0,.3,1) infinite;transform-style:preserve-3d}
+.qbox .cube{--s:32px;animation-duration:6s}
+.qbox .cube>i{font-size:20px;border-radius:4px;border-color:#7a3d00;background:#f5a623;color:#fff;text-shadow:1px 2px 0 #7a3d00}
+@keyframes hop{0%,70%,100%{transform:translateY(4px)}82%{transform:translateY(-10px)}}
+.duo{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.model{border:1px solid;border-radius:16px;padding:16px;background:rgba(8,6,26,.6)}
+.model.a{border-color:rgba(79,216,255,.45)} .model.b{border-color:rgba(255,106,213,.45)}
+.model h3{margin:0 0 12px;font-size:1.15rem}
+.plays{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.play{--c:var(--a);--d:#1b7fa0;display:flex;flex-direction:column;align-items:center;gap:2px;padding:14px 8px 12px;
+  border-radius:12px;text-decoration:none;font-weight:800;color:#0b0920;background:var(--c);
+  box-shadow:0 6px 0 var(--d),0 14px 24px rgba(0,0,0,.45);transition:transform .12s,box-shadow .12s}
+.model.b .play{--c:var(--b);--d:#a8358a}
+.play small{font-weight:700;font-size:.74rem;opacity:.75}
+.play:active{transform:translateY(5px);box-shadow:0 1px 0 var(--d),0 4px 10px rgba(0,0,0,.45)}
+.keys{margin:20px 0 0;padding:14px 16px;border-radius:14px;border:1px dashed var(--line);display:flex;flex-wrap:wrap;gap:8px 18px;align-items:center}
+.keys strong{color:var(--gold)}
+.keys span{white-space:nowrap}
+kbd{display:inline-block;min-width:2em;padding:2px 8px;margin:0 2px;text-align:center;font:700 .88rem/1.6 ui-monospace,Menlo,Consolas,monospace;
+  color:#1a1638;background:linear-gradient(#fff,#d9d6f2);border-radius:7px;box-shadow:0 3px 0 #8a86b8,0 5px 8px rgba(0,0,0,.4)}
+
+/* ---------- ペリカン ---------- */
+.gallery{display:grid;grid-template-columns:1fr 1fr;gap:clamp(10px,2.5vw,22px);perspective:1200px}
+.colh{margin:0;text-align:center;font-size:clamp(1rem,3.4vw,1.25rem);padding:6px;border-radius:10px;border-bottom:3px solid}
+.colh.a{color:var(--a);border-color:var(--a)} .colh.b{color:var(--b);border-color:var(--b)}
+.shot{margin:0;border-radius:14px;overflow:hidden;border:1px solid;background:rgba(8,6,26,.7);
+  transition:transform .35s cubic-bezier(.2,.8,.2,1),box-shadow .35s;transform-style:preserve-3d}
+.shot.a{border-color:rgba(79,216,255,.5)} .shot.b{border-color:rgba(255,106,213,.5)}
+.shot>a{display:block;background:#fff}
+.shot img{width:100%;height:auto}
+.shot figcaption{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:4px 10px;padding:9px 12px;font-size:.88rem}
+.shot figcaption b{white-space:nowrap}
+.shot figcaption a{color:var(--gold);white-space:nowrap;text-underline-offset:3px}
+.js .reveal .shot{opacity:0}
+.js .reveal .shot.a{transform:rotateY(60deg) translateX(-30px)}
+.js .reveal .shot.b{transform:rotateY(-60deg) translateX(30px)}
+.js .reveal.in .shot{opacity:1;transform:none;transition:transform .9s cubic-bezier(.2,.8,.2,1),opacity .7s,box-shadow .35s}
+.js .reveal.in .shot:nth-of-type(n+3){transition-delay:.18s}
+
+/* ---------- バグ修正 ---------- */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:0 0 18px;padding:0;list-style:none;perspective:900px}
+.stat{text-align:center;padding:16px 8px;border-radius:16px;border:1px solid var(--line);
+  background:linear-gradient(160deg,rgba(60,50,130,.5),rgba(12,10,34,.8));
+  box-shadow:0 10px 0 rgba(5,4,16,.8),0 22px 30px rgba(0,0,0,.45);transform:rotateX(10deg)}
+.stat b{display:block;font-size:clamp(1.9rem,7vw,3rem);line-height:1.15;font-weight:900;color:var(--gold);
+  font-variant-numeric:tabular-nums;text-shadow:0 0 22px rgba(255,200,87,.5)}
+.stat span{font-size:.86rem;color:var(--muted)}
+.runs{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:26px 0 20px;padding:0;list-style:none}
+.runs li{padding:10px 8px;border-radius:12px;text-align:center;font-size:.88rem;border:1px solid;background:rgba(8,6,26,.6);line-height:1.5}
+.runs li.a{border-color:rgba(79,216,255,.45)} .runs li.b{border-color:rgba(255,106,213,.45)}
+.runs b{display:block}
+.runs i{font-style:normal;color:#7dffa8;font-weight:800}
+.btn{display:inline-flex;align-items:center;gap:.5em;padding:12px 20px;border-radius:12px;text-decoration:none;font-weight:800;
+  color:#0b0920;background:linear-gradient(135deg,var(--gold),#ff9d5c);
+  box-shadow:0 6px 0 #a8641c,0 14px 24px rgba(0,0,0,.45);transition:transform .12s,box-shadow .12s;max-width:100%}
+.btn:active{transform:translateY(5px);box-shadow:0 1px 0 #a8641c,0 4px 10px rgba(0,0,0,.45)}
+.url{display:block;margin-top:14px;font:0.8rem/1.5 ui-monospace,Menlo,Consolas,monospace;color:var(--muted);overflow-wrap:anywhere}
+.note{color:var(--muted);font-size:.92rem;margin:12px 0 0}
+code{font-family:ui-monospace,Menlo,Consolas,monospace;background:rgba(255,255,255,.1);padding:1px 6px;border-radius:5px}
+
+/* ---------- 結果 ---------- */
+.result .card{text-align:center;background:linear-gradient(135deg,rgba(40,90,140,.55),rgba(120,40,120,.55)),var(--panel)}
+.result .head{justify-content:center}
+.big{font-size:clamp(1.05rem,3.6vw,1.3rem);padding:16px 30px;margin-top:6px}
+
+footer{text-align:center;color:var(--muted);font-size:.82rem;padding:8px 16px 44px}
+
+a:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
+
+@media (hover:hover){
+  .play:hover{transform:translateY(-3px)}
+  .btn:hover{transform:translateY(-3px)}
+  .shot:hover{transform:translateZ(40px) rotateX(4deg);box-shadow:0 26px 50px rgba(0,0,0,.6)}
+}
+@media (max-width:720px){
+  .duo{grid-template-columns:1fr}
+  .stats,.runs{grid-template-columns:1fr 1fr}
+}
+@media (max-width:380px){
+  .shot figcaption{font-size:.8rem;padding:8px}
+  .card{border-radius:16px}
+}
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  *,*::before,*::after{animation:none!important;transition:none!important}
+  .js .reveal,.js .reveal .shot{opacity:1!important;transform:none!important}
+  .card{transform:none!important}
+}
+</style>
+</head>
+<body>
+<canvas id="bg" aria-hidden="true"></canvas>
+<div class="veil" aria-hidden="true"></div>
+
+<header class="hero wrap">
+  <div>
+    <div class="stage" aria-hidden="true">
+      <div class="float">
+        <div class="cube">
+          <i class="fa">5.1</i><i class="fb">5.2</i><i class="fa">5.1</i><i class="fb">5.2</i><i class="fv">VS</i><i class="fv">VS</i>
+        </div>
+      </div>
+    </div>
+    <h1><span>Fable <span class="ta">5.1</span> と</span> <span><span class="tb">5.2</span> の比較</span></h1>
+    <p class="lead">同じ指示文を、Fable 5.1 と Fable 5.2 に2回ずつ渡して、出来を比べた記録です。数字の一覧は <a href="results.html">results.html</a> にあります。</p>
+    <nav aria-label="目次">
+      <ul class="nav">
+        <li><a href="#mario"><b>1</b>マリオ風ゲーム</a></li>
+        <li><a href="#pelican"><b>2</b>ペリカンの絵</a></li>
+        <li><a href="#bugfix"><b>3</b>バグ修正</a></li>
+        <li><a href="#results"><b>4</b>結果の数字</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <!-- 1. マリオ -->
+  <section id="mario" class="reveal">
+    <div class="card tilt">
+      <div class="head">
+        <span class="num">1</span>
+        <h2>マリオ1-1風のゲーム</h2>
+        <div class="qstage" aria-hidden="true"><div class="qbox"><div class="cube"><i>?</i><i>?</i><i>?</i><i>?</i><i></i><i></i></div></div></div>
+      </div>
+      <p class="sub">それぞれのボタンから、ブラウザでそのまま遊べます。</p>
+
+      <div class="duo">
+        <div class="model a">
+          <h3 class="m51">Fable 5.1</h3>
+          <div class="plays">
+            <a class="play" href="mario/fable-5-1_run1.html">1回目<small>▶ 遊ぶ</small></a>
+            <a class="play" href="mario/fable-5-1_run2.html">2回目<small>▶ 遊ぶ</small></a>
+          </div>
+        </div>
+        <div class="model b">
+          <h3 class="m52">Fable 5.2</h3>
+          <div class="plays">
+            <a class="play" href="mario/fable-5-2_run1.html">1回目<small>▶ 遊ぶ</small></a>
+            <a class="play" href="mario/fable-5-2_run2.html">2回目<small>▶ 遊ぶ</small></a>
+          </div>
+        </div>
+      </div>
+
+      <p class="keys">
+        <strong>操作</strong>
+        <span><kbd>←</kbd><kbd>→</kbd> 矢印キーで移動</span>
+        <span><kbd>Space</kbd> か <kbd>Z</kbd> キーでジャンプ</span>
+      </p>
+    </div>
+  </section>
+
+  <!-- 2. ペリカン -->
+  <section id="pelican" class="reveal">
+    <div class="card">
+      <div class="head">
+        <span class="num">2</span>
+        <h2>自転車に乗るペリカン(SVGの絵)</h2>
+      </div>
+      <p class="sub">左が Fable 5.1、右が Fable 5.2 です。画像を押すと大きく表示され、「SVG」から元ファイルを開けます。</p>
+
+      <div class="gallery">
+        <h3 class="colh a">Fable 5.1</h3>
+        <h3 class="colh b">Fable 5.2</h3>
+
+        <figure class="shot a">
+          <a href="images/svg_fable-5-1_run1.png"><img src="images/svg_fable-5-1_run1.png" alt="Fable 5.1 の1回目が描いた、自転車に乗るペリカン" loading="lazy"></a>
+          <figcaption><b>1回目</b><a href="svg/fable-5-1_run1.svg">SVGを開く</a></figcaption>
+        </figure>
+        <figure class="shot b">
+          <a href="images/svg_fable-5-2_run1.png"><img src="images/svg_fable-5-2_run1.png" alt="Fable 5.2 の1回目が描いた、自転車に乗るペリカン" loading="lazy"></a>
+          <figcaption><b>1回目</b><a href="svg/fable-5-2_run1.svg">SVGを開く</a></figcaption>
+        </figure>
+        <figure class="shot a">
+          <a href="images/svg_fable-5-1_run2.png"><img src="images/svg_fable-5-1_run2.png" alt="Fable 5.1 の2回目が描いた、自転車に乗るペリカン" loading="lazy"></a>
+          <figcaption><b>2回目</b><a href="svg/fable-5-1_run2.svg">SVGを開く</a></figcaption>
+        </figure>
+        <figure class="shot b">
+          <a href="images/svg_fable-5-2_run2.png"><img src="images/svg_fable-5-2_run2.png" alt="Fable 5.2 の2回目が描いた、自転車に乗るペリカン" loading="lazy"></a>
+          <figcaption><b>2回目</b><a href="svg/fable-5-2_run2.svg">SVGを開く</a></figcaption>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. バグ修正 -->
+  <section id="bugfix" class="reveal">
+    <div class="card tilt">
+      <div class="head">
+        <span class="num">3</span>
+        <h2>バグ修正</h2>
+      </div>
+      <p class="sub">約185行のコードにバグ14個、テスト31本。4本とも、全部直してテストが全部通った。</p>
+
+      <ul class="stats">
+        <li class="stat"><b><span class="cnt" data-to="185">185</span></b><span>コードの行数(約)</span></li>
+        <li class="stat"><b><span class="cnt" data-to="14">14</span></b><span>仕込んだバグ</span></li>
+        <li class="stat"><b><span class="cnt" data-to="31">31</span></b><span>テストの本数</span></li>
+        <li class="stat"><b><span class="cnt" data-to="4">4</span>/4</b><span>全部通った回数</span></li>
+      </ul>
+
+      <ul class="runs">
+        <li class="a"><b class="m51">Fable 5.1 1回目</b><i>✓ 全テスト合格</i></li>
+        <li class="a"><b class="m51">Fable 5.1 2回目</b><i>✓ 全テスト合格</i></li>
+        <li class="b"><b class="m52">Fable 5.2 1回目</b><i>✓ 全テスト合格</i></li>
+        <li class="b"><b class="m52">Fable 5.2 2回目</b><i>✓ 全テスト合格</i></li>
+      </ul>
+
+      <a class="btn" href="https://github.com/monacacao/fable52-comparison/tree/main/bugfix" target="_blank" rel="noopener noreferrer">GitHub でコードを見る ↗</a>
+      <span class="url">https://github.com/monacacao/fable52-comparison/tree/main/bugfix</span>
+      <p class="note">小さい課題は <code>bugfix-small</code> フォルダにあります。</p>
+    </div>
+  </section>
+
+  <!-- 4. 結果 -->
+  <section id="results" class="reveal result">
+    <div class="card tilt">
+      <div class="head">
+        <span class="num">4</span>
+        <h2>結果の数字</h2>
+      </div>
+      <p class="sub">比較した数字の一覧は、別のページにまとめてあります。</p>
+      <a class="btn big" href="results.html">results.html を開く →</a>
+    </div>
+  </section>
+
+</main>
+
+<footer>Fable 5.1 と 5.2 の比較</footer>
+
+<script>
+(function(){
+  'use strict';
+  var root=document.documentElement;
+  root.classList.add('js');
+  var mq=window.matchMedia?window.matchMedia('(prefers-reduced-motion: reduce)'):{matches:false};
+  var reduce=mq.matches;
+
+  /* ---------- スクロールで現れる演出 + 数字のカウントアップ ---------- */
+  function countUp(el){
+    var to=+el.getAttribute('data-to');
+    if(reduce||!window.requestAnimationFrame){el.textContent=to;return;}
+    var t0=null,dur=1100;
+    el.textContent='0';
+    function step(ts){
+      if(t0===null)t0=ts;
+      var p=Math.min(1,(ts-t0)/dur),e=1-Math.pow(1-p,3);
+      el.textContent=Math.round(to*e);
+      if(p<1)requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
+  var reveals=[].slice.call(document.querySelectorAll('.reveal'));
+  function show(sec){
+    if(sec.classList.contains('in'))return;
+    sec.classList.add('in');
+    [].forEach.call(sec.querySelectorAll('.cnt'),countUp);
+  }
+  if('IntersectionObserver' in window && !reduce){
+    var io=new IntersectionObserver(function(es){
+      es.forEach(function(e){if(e.isIntersecting){show(e.target);io.unobserve(e.target);}});
+    },{threshold:.12,rootMargin:'0px 0px -6% 0px'});
+    reveals.forEach(function(s){io.observe(s);});
+  }else{
+    reveals.forEach(function(s){s.classList.add('in');});
+  }
+
+  /* ---------- カードをマウスで傾ける ---------- */
+  [].forEach.call(document.querySelectorAll('.tilt'),function(card){
+    card.addEventListener('pointermove',function(e){
+      if(reduce||e.pointerType!=='mouse')return;
+      var r=card.getBoundingClientRect();
+      var x=(e.clientX-r.left)/r.width,y=(e.clientY-r.top)/r.height;
+      card.style.setProperty('--ry',((x-.5)*5).toFixed(2)+'deg');
+      card.style.setProperty('--rx',((.5-y)*4).toFixed(2)+'deg');
+      card.style.setProperty('--mx',(x*100).toFixed(1)+'%');
+      card.style.setProperty('--my',(y*100).toFixed(1)+'%');
+      card.classList.add('hot');
+    });
+    card.addEventListener('pointerleave',function(){
+      card.style.setProperty('--rx','0deg');
+      card.style.setProperty('--ry','0deg');
+      card.classList.remove('hot');
+    });
+  });
+
+  /* ---------- 背景:Canvas の3D地形 ---------- */
+  var cv=document.getElementById('bg'),ctx=cv.getContext&&cv.getContext('2d');
+  if(!ctx)return;
+  var W=0,H=0,N=30,M=26,px=0,py=0,tx=0,ty=0,running=false,stars=[];
+  for(var i=0;i<130;i++)stars.push({x:Math.random(),y:Math.random(),r:Math.random()*1.6+.4,s:Math.random()*1.5+.4,p:Math.random()*6.28});
+
+  function resize(){
+    var d=Math.min(window.devicePixelRatio||1,2);
+    W=window.innerWidth;H=window.innerHeight;
+    cv.width=Math.round(W*d);cv.height=Math.round(H*d);
+    ctx.setTransform(d,0,0,d,0,0);
+    if(!running)draw(0);
+  }
+
+  function draw(t){
+    ctx.clearRect(0,0,W,H);
+    var hz=H*.46+py*14,f=Math.max(W,H)*.55,camX=px*1.6,camH=1.5,cx=W/2;
+
+    // 地平線の光
+    var g=ctx.createRadialGradient(cx,hz,0,cx,hz,Math.max(W,H)*.55);
+    g.addColorStop(0,'rgba(255,106,213,.30)');
+    g.addColorStop(.35,'rgba(110,80,255,.12)');
+    g.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+
+    // 星
+    ctx.fillStyle='#fff';
+    for(var k=0;k<stars.length;k++){
+      var s=stars[k];
+      ctx.globalAlpha=(.3+.7*Math.abs(Math.sin(t*s.s+s.p)))*.8;
+      var sx=((s.x-px*.012)%1+1)%1*W;
+      ctx.fillRect(sx,s.y*hz*.96,s.r,s.r);
+    }
+    ctx.globalAlpha=1;
+
+    // 流れる地形(ワイヤーフレーム)
+    var sp=t*1.5,base=Math.floor(sp),fr=sp-base,prev=null;
+    ctx.lineWidth=1;
+    for(var j=M;j>=1;j--){
+      var wz=j+base,z=(j-fr)*.9+.55,row=[];
+      for(var i2=0;i2<=N;i2++){
+        var X=(i2-N/2)*1.3;
+        var edge=Math.min(1,Math.abs(i2-N/2)/(N/2));
+        var Y=(Math.sin(i2*.9+wz*.45)+Math.cos(i2*.37-wz*.3)+1.2)*1.25*edge*edge;
+        row.push(cx+(X-camX)*f/z, hz+(camH-Y)*f/z);
+      }
+      var far=(j-fr)/M,a=Math.pow(1-far,1.3)*.85;
+      if(a>.01){
+        ctx.strokeStyle='hsla('+(190+130*far)+',100%,66%,'+a.toFixed(3)+')';
+        ctx.beginPath();
+        ctx.moveTo(row[0],row[1]);
+        for(var q=2;q<row.length;q+=2)ctx.lineTo(row[q],row[q+1]);
+        if(prev){
+          for(var q2=0;q2<row.length;q2+=2){ctx.moveTo(prev[q2],prev[q2+1]);ctx.lineTo(row[q2],row[q2+1]);}
+        }
+        ctx.stroke();
+      }
+      prev=row;
+    }
+  }
+
+  function loop(ts){
+    if(reduce||document.hidden){running=false;return;}
+    px+=(tx-px)*.05;py+=(ty-py)*.05;
+    draw(ts/1000);
+    requestAnimationFrame(loop);
+  }
+  function start(){
+    if(running||reduce||document.hidden)return;
+    running=true;requestAnimationFrame(loop);
+  }
+
+  window.addEventListener('resize',resize);
+  window.addEventListener('pointermove',function(e){
+    if(e.pointerType!=='mouse')return;
+    tx=(e.clientX/W-.5)*2;ty=(e.clientY/H-.5)*2;
+  },{passive:true});
+  document.addEventListener('visibilitychange',start);
+  var onMq=function(e){
+    reduce=e.matches;
+    if(reduce){px=py=tx=ty=0;reveals.forEach(function(s){s.classList.add('in');});draw(0);}
+    else start();
+  };
+  if(mq.addEventListener)mq.addEventListener('change',onMq);
+  else if(mq.addListener)mq.addListener(onMq);
+
+  resize();
+  start();
+})();
+</script>
+</body>
+</html>

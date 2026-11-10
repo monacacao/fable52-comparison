@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fable 5.1 と 5.2 の比較</title>
+<style>
+:root{
+  --bg:#060a17;--fg:#eef2ff;--muted:#9aa6c8;
+  --c51:#36e6ff;--c51b:#2b7bff;
+  --c52:#ff6ad5;--c52b:#ffa14a;
+  --card:rgba(14,20,46,.78);--line:rgba(255,255,255,.12);
+  --r:18px;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--fg);
+  font-family:system-ui,-apple-system,"Segoe UI","Hiragino Sans","Noto Sans JP",Meiryo,sans-serif;
+  line-height:1.75;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+a{color:inherit}
+#bg{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none}
+.wrap{position:relative;z-index:1;max-width:1100px;margin:0 auto;padding:0 20px 80px}
+
+/* ===== Hero ===== */
+.hero{min-height:88vh;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:70px 0 40px;perspective:900px}
+.kicker{font-size:.8rem;letter-spacing:.3em;color:var(--muted);text-transform:uppercase;margin-bottom:14px}
+h1.title{margin:0;font-size:clamp(1.9rem,7vw,4.6rem);font-weight:900;line-height:1.15;letter-spacing:.02em;transform-style:preserve-3d}
+h1.title .ch{display:inline-block;transform-style:preserve-3d;
+  animation:drop .9s cubic-bezier(.2,.9,.2,1.2) both;animation-delay:calc(var(--i)*55ms)}
+h1.title .sp{display:inline-block;width:.3em}
+.v51{background:linear-gradient(120deg,var(--c51),var(--c51b));-webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 0 18px rgba(54,230,255,.35))}
+.v52{background:linear-gradient(120deg,var(--c52),var(--c52b));-webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 0 18px rgba(255,106,213,.35))}
+@keyframes drop{0%{opacity:0;transform:translateY(-60px) rotateX(-90deg) translateZ(80px)}100%{opacity:1;transform:none}}
+.lead{max-width:640px;color:var(--muted);margin:22px auto 0;font-size:clamp(.95rem,2.6vw,1.1rem);
+  animation:fade 1s .9s both}
+.lead a{color:#fff;text-decoration:none;border-bottom:1px dashed var(--c51)}
+@keyframes fade{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+
+.nav{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:34px;animation:fade 1s 1.2s both}
+.nav a{text-decoration:none;font-size:.9rem;padding:9px 16px;border-radius:999px;border:1px solid var(--line);
+  background:rgba(255,255,255,.05);backdrop-filter:blur(8px);transition:transform .25s,background .25s}
+.nav a:hover{transform:translateY(-3px);background:rgba(255,255,255,.12)}
+
+/* floating 3D emblem */
+.orbit{position:relative;width:140px;height:140px;margin:40px auto 0;perspective:600px;animation:fade 1s 1.4s both}
+.cube{position:absolute;inset:0;transform-style:preserve-3d;animation:spin 14s linear infinite}
+.cube i{position:absolute;inset:20px;border:2px solid;border-radius:10px;opacity:.85;
+  background:linear-gradient(135deg,rgba(255,255,255,.08),transparent)}
+.cube i:nth-child(1){border-color:var(--c51);transform:translateZ(50px)}
+.cube i:nth-child(2){border-color:var(--c52);transform:rotateY(180deg) translateZ(50px)}
+.cube i:nth-child(3){border-color:var(--c51b);transform:rotateY(90deg) translateZ(50px)}
+.cube i:nth-child(4){border-color:var(--c52b);transform:rotateY(-90deg) translateZ(50px)}
+.cube i:nth-child(5){border-color:#fff;transform:rotateX(90deg) translateZ(50px)}
+.cube i:nth-child(6){border-color:#fff;transform:rotateX(-90deg) translateZ(50px)}
+@keyframes spin{from{transform:rotateX(-20deg) rotateY(0)}to{transform:rotateX(-20deg) rotateY(360deg)}}
+
+/* ===== Sections ===== */
+section{margin-top:90px;perspective:1200px}
+.sh{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin-bottom:8px}
+.num{font-size:.85rem;font-weight:800;letter-spacing:.2em;color:var(--muted)}
+h2{margin:0;font-size:clamp(1.4rem,4.5vw,2.1rem);font-weight:800}
+.sub{color:var(--muted);margin:0 0 24px;max-width:720px}
+.sub code{background:rgba(255,255,255,.08);padding:2px 7px;border-radius:6px;font-size:.9em}
+
+.reveal{opacity:0;transform:translateY(40px) rotateX(14deg);transform-origin:50% 100%;transition:opacity .8s,transform .8s cubic-bezier(.2,.8,.2,1)}
+.reveal.in{opacity:1;transform:none}
+
+.badge{display:inline-flex;align-items:center;gap:6px;font-size:.78rem;font-weight:800;letter-spacing:.05em;padding:4px 10px;border-radius:999px;color:#061020}
+.b51{background:linear-gradient(120deg,var(--c51),var(--c51b))}
+.b52{background:linear-gradient(120deg,var(--c52),var(--c52b))}
+
+/* 3D tilt card */
+.tilt{position:relative;transform-style:preserve-3d;transition:transform .35s ease,box-shadow .35s;--gx:50%;--gy:50%}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);backdrop-filter:blur(10px);
+  box-shadow:0 20px 50px rgba(0,0,0,.45);overflow:hidden}
+.card::after{content:"";position:absolute;inset:0;pointer-events:none;border-radius:inherit;
+  background:radial-gradient(circle at var(--gx) var(--gy),rgba(255,255,255,.14),transparent 55%);opacity:0;transition:opacity .3s}
+.tilt:hover.card::after{opacity:1}
+
+/* ===== Mario grid ===== */
+.grid4{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:18px}
+.gcard{display:flex;flex-direction:column;text-decoration:none}
+.scene{position:relative;height:130px;overflow:hidden;
+  background:linear-gradient(#5fa9ff,#9fd4ff 70%,#9fd4ff)}
+.scene.alt{background:linear-gradient(#1b1740,#4a2f7a 70%)}
+.ground{position:absolute;left:0;right:0;bottom:0;height:22px;
+  background:repeating-linear-gradient(90deg,#b5542a 0 14px,#8c3a1c 14px 16px),#8c3a1c;
+  background-size:16px 100%;border-top:3px solid #4a200f;animation:run 1.2s linear infinite}
+@keyframes run{to{background-position-x:-32px}}
+.cloud{position:absolute;top:18px;width:46px;height:18px;background:#fff;border-radius:20px;opacity:.9;animation:drift 9s linear infinite}
+.cloud::before{content:"";position:absolute;left:10px;top:-10px;width:22px;height:22px;background:#fff;border-radius:50%}
+.cloud.c2{top:40px;width:34px;height:14px;animation-duration:13s;animation-delay:-5s}
+@keyframes drift{from{left:110%}to{left:-60px}}
+.pipe{position:absolute;right:26px;bottom:22px;width:34px;height:40px;background:linear-gradient(90deg,#2fbf5a,#1a7a37);border-radius:3px}
+.pipe::before{content:"";position:absolute;left:-4px;top:-10px;width:42px;height:12px;background:linear-gradient(90deg,#3ad66a,#1a7a37);border-radius:3px}
+.qblock{position:absolute;left:34px;top:46px;width:22px;height:22px;background:#f5b400;border:3px solid #a26b00;
+  font:900 13px/16px monospace;color:#7a4b00;text-align:center;animation:bob 1.6s ease-in-out infinite}
+@keyframes bob{50%{transform:translateY(-7px)}}
+.hero-sprite{position:absolute;left:68px;bottom:22px;width:14px;height:20px;background:#e23a2e;border-radius:3px 3px 0 0;animation:jump 1.6s ease-in-out infinite}
+.hero-sprite::after{content:"";position:absolute;left:-2px;bottom:-2px;width:18px;height:8px;background:#3b4bd8;border-radius:2px}
+@keyframes jump{50%{transform:translateY(-34px)}}
+.gbody{padding:16px 18px 18px;display:flex;flex-direction:column;gap:10px;flex:1}
+.gtop{display:flex;justify-content:space-between;align-items:center}
+.run{color:var(--muted);font-size:.9rem}
+.open{margin-top:auto;display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:11px 14px;border-radius:12px;font-weight:800;
+  background:rgba(255,255,255,.08);border:1px solid var(--line);transition:background .25s,transform .25s}
+.gcard:hover .open{background:rgba(255,255,255,.16);transform:translateZ(20px)}
+.ctrl{margin-top:16px;color:var(--muted);font-size:.92rem}
+.key{display:inline-block;font:700 .8rem/1 ui-monospace,monospace;padding:5px 8px;border-radius:7px;border:1px solid var(--line);background:rgba(255,255,255,.07);box-shadow:0 2px 0 rgba(255,255,255,.12);margin:0 2px}
+
+/* ===== Pelican compare ===== */
+.cmp{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.colhead{text-align:center;font-weight:800;font-size:1.05rem;padding:6px 0}
+.flip{perspective:1000px;aspect-ratio:1/1}
+.flip-inner{position:relative;width:100%;height:100%;transform-style:preserve-3d;transition:transform .8s cubic-bezier(.2,.8,.2,1)}
+.flip.on .flip-inner{transform:rotateY(180deg)}
+.face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:var(--r);overflow:hidden;
+  background:var(--card);border:1px solid var(--line);box-shadow:0 20px 50px rgba(0,0,0,.45)}
+.face.back{transform:rotateY(180deg);display:flex;flex-direction:column;justify-content:center;align-items:center;gap:12px;padding:18px;text-align:center}
+.face.front a{display:block;width:100%;height:100%}
+.face.front img{display:block;width:100%;height:100%;object-fit:cover;background:#fff}
+.runtag{position:absolute;left:10px;top:10px;font-size:.75rem;font-weight:800;padding:3px 9px;border-radius:999px;background:rgba(0,0,0,.6);backdrop-filter:blur(6px)}
+.flipbtn{position:absolute;right:10px;bottom:10px;border:0;cursor:pointer;font:800 .78rem system-ui,sans-serif;color:#fff;
+  padding:8px 12px;border-radius:999px;background:rgba(0,0,0,.62);backdrop-filter:blur(6px);transition:transform .25s}
+.flipbtn:hover{transform:scale(1.06)}
+.back .ttl{font-weight:800;font-size:1.05rem}
+.back .lk{display:flex;flex-direction:column;gap:8px;width:100%;max-width:220px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;font-weight:800;padding:11px 16px;border-radius:12px;
+  background:rgba(255,255,255,.1);border:1px solid var(--line);transition:transform .25s,background .25s}
+.btn:hover{background:rgba(255,255,255,.2);transform:translateY(-2px)}
+.btn.p{color:#061020;border:0}
+.btn.p51{background:linear-gradient(120deg,var(--c51),var(--c51b))}
+.btn.p52{background:linear-gradient(120deg,var(--c52),var(--c52b))}
+.vs{display:none}
+
+/* ===== Bugfix ===== */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-bottom:18px}
+.stat{padding:20px 16px;text-align:center}
+.stat b{display:block;font-size:clamp(1.8rem,6vw,2.6rem);font-weight:900;line-height:1.1;
+  background:linear-gradient(120deg,#fff,var(--c51));-webkit-background-clip:text;background-clip:text;color:transparent}
+.stat.ok b{background:linear-gradient(120deg,#7dffb2,#36e6ff);-webkit-background-clip:text;background-clip:text}
+.stat span{display:block;color:var(--muted);font-size:.85rem;margin-top:6px}
+.bugcard{padding:22px;display:grid;grid-template-columns:1fr auto;gap:18px;align-items:center}
+.bugcard p{margin:0;color:var(--muted)}
+.bugcard .lk{display:flex;flex-direction:column;gap:8px}
+.bugcard .url{font-size:.78rem;color:var(--muted);word-break:break-all}
+
+/* ===== Results CTA ===== */
+.cta{display:flex;justify-content:center}
+.big{position:relative;display:inline-flex;flex-direction:column;align-items:center;gap:4px;text-decoration:none;text-align:center;
+  padding:30px 44px;border-radius:24px;font-weight:900;font-size:clamp(1.2rem,4vw,1.7rem);color:#061020;
+  background:linear-gradient(120deg,var(--c51),var(--c52));transform-style:preserve-3d;
+  box-shadow:0 0 0 1px rgba(255,255,255,.3) inset,0 24px 60px rgba(100,120,255,.35);transition:transform .3s,box-shadow .3s}
+.big small{font-weight:600;font-size:.6em;opacity:.8}
+.big:hover{transform:translateY(-6px) rotateX(6deg);box-shadow:0 34px 70px rgba(100,120,255,.45)}
+.big::before{content:"";position:absolute;inset:-3px;border-radius:27px;z-index:-1;
+  background:conic-gradient(from 0deg,var(--c51),var(--c52),var(--c52b),var(--c51));filter:blur(14px);opacity:.7;animation:rot 6s linear infinite}
+@keyframes rot{to{transform:rotate(360deg)}}
+
+footer{margin-top:80px;text-align:center;color:var(--muted);font-size:.85rem}
+
+@media (max-width:560px){
+  .cmp{grid-template-columns:1fr 1fr;gap:10px}
+  .bugcard{grid-template-columns:1fr}
+  .flipbtn{padding:7px 10px}
+}
+@media (max-width:380px){.cmp{grid-template-columns:1fr}.colhead{display:none}.vs{display:block;text-align:center;font-weight:800;color:var(--muted)}}
+
+/* ===== Reduced motion ===== */
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{animation:none !important;transition:none !important;scroll-behavior:auto !important}
+  .reveal{opacity:1;transform:none}
+  .tilt:hover,.big:hover,.nav a:hover,.btn:hover{transform:none}
+  .cube{transform:rotateX(-20deg) rotateY(35deg)}
+  .flip-inner{transition:none}
+}
+</style>
+</head>
+<body>
+<canvas id="bg" aria-hidden="true"></canvas>
+
+<div class="wrap">
+
+<header class="hero">
+  <div class="kicker">Side-by-side comparison</div>
+  <h1 class="title" id="title">
+    <span class="v51" data-word="Fable 5.1"></span><span class="sp"></span><span class="w" data-word="と"></span><span class="sp"></span><span class="v52" data-word="5.2"></span><span class="sp"></span><span class="w" data-word="の比較"></span>
+  </h1>
+  <p class="lead">同じ指示文を、Fable 5.1 と Fable 5.2 に2回ずつ渡して、出来を比べた記録です。数字の一覧は <a href="results.html">results.html</a> にあります。</p>
+  <nav class="nav" aria-label="目次">
+    <a href="#mario">🎮 マリオ1-1風のゲーム</a>
+    <a href="#pelican">🚲 自転車に乗るペリカン</a>
+    <a href="#bugfix">🐛 バグ修正</a>
+    <a href="#results">📊 結果の数字</a>
+  </nav>
+  <div class="orbit" aria-hidden="true"><div class="cube"><i></i><i></i><i></i><i></i><i></i><i></i></div></div>
+</header>
+
+<!-- ===== 1. Mario ===== -->
+<section id="mario">
+  <div class="sh"><span class="num">01</span><h2>マリオ1-1風のゲーム</h2></div>
+  <p class="sub">ブラウザで遊べる横スクロールのアクションゲーム。カードを開くとそのまま遊べます。</p>
+
+  <div class="grid4">
+    <a class="card tilt gcard reveal" href="mario/fable-5-1_run1.html">
+      <div class="scene"><div class="cloud"></div><div class="cloud c2"></div><div class="qblock">?</div><div class="hero-sprite"></div><div class="pipe"></div><div class="ground"></div></div>
+      <div class="gbody"><div class="gtop"><span class="badge b51">Fable 5.1</span><span class="run">1回目</span></div><span class="open">▶ ゲームを開く</span></div>
+    </a>
+    <a class="card tilt gcard reveal" href="mario/fable-5-1_run2.html">
+      <div class="scene alt"><div class="cloud"></div><div class="cloud c2"></div><div class="qblock">?</div><div class="hero-sprite"></div><div class="pipe"></div><div class="ground"></div></div>
+      <div class="gbody"><div class="gtop"><span class="badge b51">Fable 5.1</span><span class="run">2回目</span></div><span class="open">▶ ゲームを開く</span></div>
+    </a>
+    <a class="card tilt gcard reveal" href="mario/fable-5-2_run1.html">
+      <div class="scene"><div class="cloud"></div><div class="cloud c2"></div><div class="qblock">?</div><div class="hero-sprite"></div><div class="pipe"></div><div class="ground"></div></div>
+      <div class="gbody"><div class="gtop"><span class="badge b52">Fable 5.2</span><span class="run">1回目</span></div><span class="open">▶ ゲームを開く</span></div>
+    </a>
+    <a class="card tilt gcard reveal" href="mario/fable-5-2_run2.html">
+      <div class="scene alt"><div class="cloud"></div><div class="cloud c2"></div><div class="qblock">?</div><div class="hero-sprite"></div><div class="pipe"></div><div class="ground"></div></div>
+      <div class="gbody"><div class="gtop"><span class="badge b52">Fable 5.2</span><span class="run">2回目</span></div><span class="open">▶ ゲームを開く</span></div>
+    </a>
+  </div>
+  <p class="ctrl">操作: <span class="key">←</span><span class="key">→</span> で移動、<span class="key">Space</span> か <span class="key">Z</span> でジャンプ</p>
+</section>
+
+<!-- ===== 2. Pelican ===== -->
+<section id="pelican">
+  <div class="sh"><span class="num">02</span><h2>自転車に乗るペリカン(SVGの絵)</h2></div>
+  <p class="sub">左が Fable 5.1、右が Fable 5.2。上段が1回目、下段が2回目です。画像をクリックすると PNG が開き、右下の「裏面」でSVGの元ファイルへのリンクが出ます。</p>
+
+  <div class="cmp">
+    <div class="colhead"><span class="badge b51">Fable 5.1</span></div>
+    <div class="colhead"><span class="badge b52">Fable 5.2</span></div>
+
+    <div class="vs">Fable 5.1 / 1回目</div>
+    <div class="flip reveal">
+      <div class="flip-inner">
+        <div class="face front tilt card">
+          <a href="images/svg_fable-5-1_run1.png"><img src="images/svg_fable-5-1_run1.png" alt="Fable 5.1 1回目: 自転車に乗るペリカン" loading="lazy"></a>
+          <span class="runtag">5.1 / 1回目</span>
+          <button class="flipbtn" type="button" aria-label="裏面を見る">裏面 ⟲</button>
+        </div>
+        <div class="face back">
+          <span class="badge b51">Fable 5.1</span><div class="ttl">1回目</div>
+          <div class="lk"><a class="btn p p51" href="svg/fable-5-1_run1.svg">SVGの元ファイル</a><a class="btn" href="images/svg_fable-5-1_run1.png">PNG画像</a></div>
+          <button class="flipbtn" type="button" aria-label="表面に戻る">表面 ⟳</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="vs">Fable 5.2 / 1回目</div>
+    <div class="flip reveal">
+      <div class="flip-inner">
+        <div class="face front tilt card">
+          <a href="images/svg_fable-5-2_run1.png"><img src="images/svg_fable-5-2_run1.png" alt="Fable 5.2 1回目: 自転車に乗るペリカン" loading="lazy"></a>
+          <span class="runtag">5.2 / 1回目</span>
+          <button class="flipbtn" type="button" aria-label="裏面を見る">裏面 ⟲</button>
+        </div>
+        <div class="face back">
+          <span class="badge b52">Fable 5.2</span><div class="ttl">1回目</div>
+          <div class="lk"><a class="btn p p52" href="svg/fable-5-2_run1.svg">SVGの元ファイル</a><a class="btn" href="images/svg_fable-5-2_run1.png">PNG画像</a></div>
+          <button class="flipbtn" type="button" aria-label="表面に戻る">表面 ⟳</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="vs">Fable 5.1 / 2回目</div>
+    <div class="flip reveal">
+      <div class="flip-inner">
+        <div class="face front tilt card">
+          <a href="images/svg_fable-5-1_run2.png"><img src="images/svg_fable-5-1_run2.png" alt="Fable 5.1 2回目: 自転車に乗るペリカン" loading="lazy"></a>
+          <span class="runtag">5.1 / 2回目</span>
+          <button class="flipbtn" type="button" aria-label="裏面を見る">裏面 ⟲</button>
+        </div>
+        <div class="face back">
+          <span class="badge b51">Fable 5.1</span><div class="ttl">2回目</div>
+          <div class="lk"><a class="btn p p51" href="svg/fable-5-1_run2.svg">SVGの元ファイル</a><a class="btn" href="images/svg_fable-5-1_run2.png">PNG画像</a></div>
+          <button class="flipbtn" type="button" aria-label="表面に戻る">表面 ⟳</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="vs">Fable 5.2 / 2回目</div>
+    <div class="flip reveal">
+      <div class="flip-inner">
+        <div class="face front tilt card">
+          <a href="images/svg_fable-5-2_run2.png"><img src="images/svg_fable-5-2_run2.png" alt="Fable 5.2 2回目: 自転車に乗るペリカン" loading="lazy"></a>
+          <span class="runtag">5.2 / 2回目</span>
+          <button class="flipbtn" type="button" aria-label="裏面を見る">裏面 ⟲</button>
+        </div>
+        <div class="face back">
+          <span class="badge b52">Fable 5.2</span><div class="ttl">2回目</div>
+          <div class="lk"><a class="btn p p52" href="svg/fable-5-2_run2.svg">SVGの元ファイル</a><a class="btn" href="images/svg_fable-5-2_run2.png">PNG画像</a></div>
+          <button class="flipbtn" type="button" aria-label="表面に戻る">表面 ⟳</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 3. Bugfix ===== -->
+<section id="bugfix">
+  <div class="sh"><span class="num">03</span><h2>バグ修正</h2></div>
+  <p class="sub">約185行のコードにバグ14個、テスト31本。4本とも、全部直してテストが全部通った。</p>
+
+  <div class="stats">
+    <div class="card tilt stat reveal"><b data-count="185">0</b><span>行のコード(約)</span></div>
+    <div class="card tilt stat reveal"><b data-count="14">0</b><span>個のバグ</span></div>
+    <div class="card tilt stat reveal"><b data-count="31">0</b><span>本のテスト</span></div>
+    <div class="card tilt stat ok reveal"><b>4/4</b><span>全部直して全テスト通過</span></div>
+  </div>
+
+  <div class="card tilt bugcard reveal">
+    <div>
+      <p>修正前後のコードとテストは GitHub にあります。小さい課題は <code>bugfix-small</code> フォルダです。</p>
+      <div class="url">https://github.com/monacacao/fable52-comparison/tree/main/bugfix</div>
+    </div>
+    <div class="lk">
+      <a class="btn p p51" href="https://github.com/monacacao/fable52-comparison/tree/main/bugfix">GitHub で見る ↗</a>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 4. Results ===== -->
+<section id="results">
+  <div class="sh"><span class="num">04</span><h2>結果の数字</h2></div>
+  <p class="sub">各課題の採点・所要時間などの一覧です。</p>
+  <div class="cta reveal">
+    <a class="big" href="results.html">📊 results.html を開く<small>数字の一覧へ</small></a>
+  </div>
+</section>
+
+<footer>Fable 5.1 と 5.2 の比較</footer>
+</div>
+
+<script>
+(function(){
+  var reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* --- split title into letters --- */
+  var idx = 0;
+  document.querySelectorAll('#title [data-word]').forEach(function(w){
+    var txt = w.getAttribute('data-word');
+    w.textContent = '';
+    for (var i=0;i<txt.length;i++){
+      var s=document.createElement('span'); s.className='ch'; s.style.setProperty('--i',idx++);
+      s.textContent = txt[i]===' ' ? '\u00A0' : txt[i]; w.appendChild(s);
+    }
+  });
+
+  /* --- background: 3D wireframe cubes + perspective floor --- */
+  var c=document.getElementById('bg'), g=c.getContext('2d'), W,H,D;
+  function rs(){ D=Math.min(window.devicePixelRatio||1,2); W=c.width=innerWidth*D; H=c.height=innerHeight*D; }
+  addEventListener('resize',function(){rs(); if(reduce) draw(0);}); rs();
+  var V=[[-1,-1,-1],[1,-1,-1],[1,1,-1],[-1,1,-1],[-1,-1,1],[1,-1,1],[1,1,1],[-1,1,1]];
+  var E=[[0,1],[1,2],[2,3],[3,0],[4,5],[5,6],[6,7],[7,4],[0,4],[1,5],[2,6],[3,7]];
+  var cubes=[]; for(var i=0;i<26;i++){ cubes.push({x:(Math.random()-.5)*3.2,y:(Math.random()-.5)*2.2,z:1+Math.random()*4,s:.08+Math.random()*.14,
+    ax:Math.random()*6.28,ay:Math.random()*6.28,vx:(Math.random()-.5)*1.2,vy:(Math.random()-.5)*1.2,vz:.25+Math.random()*.35,hue:Math.random()<.5?190:320}); }
+  function proj(x,y,z){ var f=Math.min(W,H)*.9; return [W/2+x/z*f, H/2+y/z*f]; }
+  function rot(p,ax,ay){ var cx=Math.cos(ax),sx=Math.sin(ax),cy=Math.cos(ay),sy=Math.sin(ay);
+    var y=p[1]*cx-p[2]*sx, z=p[1]*sx+p[2]*cx; var x=p[0]*cy+z*sy; z=-p[0]*sy+z*cy; return [x,y,z]; }
+  var t=0, last=0;
+  function draw(dt){
+    t+=dt; g.clearRect(0,0,W,H);
+    /* floor grid */
+    var scroll=(window.scrollY||0)*0.0006, hy=H*0.62;
+    g.lineWidth=1*D;
+    for(var i=0;i<14;i++){ var z=0.6+((i/14+t*0.08)%1)*6; var p=proj(0,0.9,z); var a=(1-(z-0.6)/6)*.25;
+      g.strokeStyle='rgba(120,150,255,'+a+')'; g.beginPath(); g.moveTo(0,p[1]+hy*0); g.lineTo(W,p[1]); g.stroke(); }
+    for(var k=-10;k<=10;k++){ var p1=proj(k*0.9,0.9,0.6), p2=proj(k*0.9,0.9,8);
+      g.strokeStyle='rgba(120,150,255,.12)'; g.beginPath(); g.moveTo(p1[0],p1[1]); g.lineTo(p2[0],p2[1]); g.stroke(); }
+    /* cubes */
+    cubes.sort(function(a,b){return b.z-a.z;});
+    for(var n=0;n<cubes.length;n++){ var cb=cubes[n];
+      cb.z-=cb.vz*dt; cb.ax+=cb.vx*dt; cb.ay+=cb.vy*dt;
+      if(cb.z<0.5){ cb.z=5.5; cb.x=(Math.random()-.5)*3.2; cb.y=(Math.random()-.5)*2.2; }
+      var yy=cb.y-scroll*cb.z*0.3, pts=[];
+      for(var v=0;v<8;v++){ var r=rot(V[v],cb.ax,cb.ay); pts.push(proj(cb.x+r[0]*cb.s, yy+r[1]*cb.s, cb.z+r[2]*cb.s)); }
+      var al=Math.max(0,Math.min(1,(5.5-cb.z)/4.5))*.75;
+      g.strokeStyle='hsla('+cb.hue+',95%,70%,'+al+')'; g.lineWidth=(1.4/cb.z+.4)*D;
+      g.shadowColor='hsla('+cb.hue+',95%,65%,'+al+')'; g.shadowBlur=14*D/cb.z;
+      g.beginPath(); for(var e=0;e<12;e++){ g.moveTo(pts[E[e][0]][0],pts[E[e][0]][1]); g.lineTo(pts[E[e][1]][0],pts[E[e][1]][1]); } g.stroke();
+      g.shadowBlur=0;
+    }
+    /* vignette */
+    var gr=g.createRadialGradient(W/2,H/2,H*.2,W/2,H/2,Math.max(W,H)*.75); gr.addColorStop(0,'rgba(6,10,23,0)'); gr.addColorStop(1,'rgba(6,10,23,.9)');
+    g.fillStyle=gr; g.fillRect(0,0,W,H);
+  }
+  if(reduce){ draw(0); }
+  else { (function loop(ts){ var dt=last?Math.min((ts-last)/1000,.05):0; last=ts; if(!document.hidden) draw(dt); requestAnimationFrame(loop); })(0); }
+
+  /* --- scroll reveal --- */
+  var rv=document.querySelectorAll('.reveal');
+  if(reduce || !('IntersectionObserver' in window)){ rv.forEach(function(el){el.classList.add('in');}); }
+  else { var io=new IntersectionObserver(function(es){ es.forEach(function(e){ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target);} }); },{threshold:.15});
+    rv.forEach(function(el,i){ el.style.transitionDelay=(i%4)*80+'ms'; io.observe(el); }); }
+
+  /* --- pointer tilt (desktop only) --- */
+  if(!reduce && matchMedia('(hover:hover) and (pointer:fine)').matches){
+    document.querySelectorAll('.tilt').forEach(function(el){
+      el.addEventListener('pointermove',function(e){ var r=el.getBoundingClientRect(); var px=(e.clientX-r.left)/r.width-.5, py=(e.clientY-r.top)/r.height-.5;
+        el.style.transform='rotateX('+(-py*12)+'deg) rotateY('+(px*12)+'deg) translateZ(12px)';
+        el.style.setProperty('--gx',(px+.5)*100+'%'); el.style.setProperty('--gy',(py+.5)*100+'%'); });
+      el.addEventListener('pointerleave',function(){ el.style.transform=''; });
+    });
+  }
+
+  /* --- flip cards --- */
+  document.querySelectorAll('.flipbtn').forEach(function(b){
+    b.addEventListener('click',function(e){ e.preventDefault(); var f=b.closest('.flip'); f.classList.toggle('on');
+      var front=f.querySelector('.front'); if(front) front.style.transform=''; });
+  });
+
+  /* --- count up --- */
+  var nums=document.querySelectorAll('[data-count]');
+  if(reduce || !('IntersectionObserver' in window)){ nums.forEach(function(n){ n.textContent=n.getAttribute('data-count'); }); }
+  else { var io2=new IntersectionObserver(function(es){ es.forEach(function(e){ if(!e.isIntersecting) return; io2.unobserve(e.target);
+      var n=e.target, to=+n.getAttribute('data-count'), st=performance.now();
+      (function tick(now){ var p=Math.min(1,(now-st)/1200); p=1-Math.pow(1-p,3); n.textContent=Math.round(to*p); if(p<1) requestAnimationFrame(tick); })(st); }); },{threshold:.5});
+    nums.forEach(function(n){ io2.observe(n); }); }
+})();
+</script>
+</body>
+</html>
